@@ -62,7 +62,7 @@ The index containing the georeferenced data that you want to analyze needs to ha
 2. one or more fields (corresponding to the previous ones) of type [GEO_SHAPE](https://www.elastic.co/guide/en/elasticsearch/reference/current/geo-shape.html) POINT.
 
 This is needed because at present geo_shape queries can't be executed on geo_point field types, thus you have to do those queries on a geo_shape field of type Point.
-Nonetheless the geo_point field is useful to restrict the number of geo_shape borders on which making the geo_shape queries. You do this by creating a geo_bounding_box on the georeferenced data (geo_point field, can't be done on the geo_shape field of type Point) and intersect it with all the geo_shape borders contained in the 'world' index.
+Nonetheless the geo_point field is useful to restrict the number of geo_shape borders on which making the geo_shape queries. You do this by creating a geo_bounding_box on the georeferenced data (on the geo_point field, can't be done on the geo_shape field of type Point) and intersect it with all the geo_shape borders contained in the 'world' index.
 
 For example:
 
@@ -92,7 +92,7 @@ Pay attention to how the coordinates are written: the geo_shape field always wan
 
 If your index data come only with the geo_point field then you have to build a script and add the geo_shape field.
 
-Inside this repo I will include an index and the associated script as example. The data that you find inside this folder already has the two requested fields, so don't use the script on them. That script can help you to add the geo_shape Point field to others index you've downloaded.
+Inside this repo I will include an index and the associated script as example. The data that you find inside this folder already have the two requested fields, so don't use the script on them. That script can help you to add the geo_shape Point field to others index you will download.
 To load that index on Elasticsearch (MAKE SURE YOU HAVE 'ELASTICDUMP' INSTALLED):
 
 1. start your elasticsearch: ```$ path_to_elasticsearch_folder/bin/elasticsearch```
