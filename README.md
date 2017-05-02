@@ -40,8 +40,8 @@ This plugin integrates the possibility to create a new type of visualization for
 1. start your elasticsearch: ```$ path_to_elasticsearch_folder/bin/elasticsearch```
 2. ```$ cd path_to_kibana_folder/plugins```
 3. ```$ git clone "https://..."```
-4. ```$ cd chorMap```
-5. For default the plugin establishes a connection with elasticsearch on ```HOST="localhost"``` and on ```PORT="9200"```, but you can change these parameters by editing the ```install.bash``` file in the ```chorMap``` folder. Then execute the command
+4. ```$ cd kibanaChoroplethMap```
+5. For default the plugin establishes a connection with elasticsearch on ```HOST="localhost"``` and on ```PORT="9200"```, but you can change these parameters by editing the ```install.bash``` file in the ```kibanaChoroplethMap``` folder. Then execute the command
 
 ```$ ./install.bash```
 
