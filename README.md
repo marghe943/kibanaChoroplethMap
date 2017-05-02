@@ -97,7 +97,7 @@ To load that index on Elasticsearch (MAKE SURE YOU HAVE 'ELASTICDUMP' INSTALLED)
 
 1. start your elasticsearch: ```$ path_to_elasticsearch_folder/bin/elasticsearch```
 2. ```$ cd path_to_kibana_folder/plugins```
-3. ```$ cd chorMap/index_example```
+3. ```$ cd kibanaChoroplethMap/index_example```
 4. ```elasticdump --input=index_schema.json --output=http://localhost:9200/<index_name> --type=mapping```
 5. ```elasticdump --input=index_data.json --output=http://localhost:9200/<index_name> --type=data```
 
