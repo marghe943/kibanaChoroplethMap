@@ -88,4 +88,4 @@ else
 	echo "node not installed. Install node and retry."
 fi
 
-
+printf "\nIf you have interrupted this script or there's been an error, before executing it again, delete the conf.js file and the node_modules folder\n"
