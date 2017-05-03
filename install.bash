@@ -68,7 +68,7 @@ if [ ! -z "$VALID_NODE" ]; then
 			printf "window.port = \"$PORT\";\n" >> conf.js
 			
 			printf "\nadding configuration lines to elasticsearch.yml...\n"
-
+			#this is necessary if you're working localhost.
 			cd "$1"/config
 
 			printf "\n\nhttp.cors.enabled : true\n" >> elasticsearch.yml
