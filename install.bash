@@ -66,6 +66,16 @@ if [ ! -z "$VALID_NODE" ]; then
 			printf "\ncreating conf.js file...\n"
 			printf "window.host = \"$HOST\";\n" > conf.js
 			printf "window.port = \"$PORT\";\n" >> conf.js
+			
+			printf "\nadding configuration lines to elasticsearch.yml...\n"
+
+			cd "$1"/config
+
+			printf "\n\nhttp.cors.enabled : true\n" >> elasticsearch.yml
+			printf "http.cors.allow-origin: \"*\"\n" >> elasticsearch.yml
+			printf "http.cors.allow-methods : OPTIONS, HEAD, GET, POST, PUT, DELETE\n" >> elasticsearch.yml
+			printf "http.cors.allow-headers : \"X-Requested-With,X-Auth-Token,Content-Type, Content-Length, Authorization, kbn-version\"\n" >> elasticsearch.yml
+			
 		else
 			echo "elasticdump not installed. Install elasticdump and retry."
 		fi
