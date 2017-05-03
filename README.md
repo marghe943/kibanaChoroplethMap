@@ -43,7 +43,7 @@ This plugin integrates the possibility to create a new type of visualization for
 4. ```$ cd kibanaChoroplethMap```
 5. For default the plugin establishes a connection with elasticsearch on ```HOST="localhost"``` and on ```PORT="9200"```, but you can change these parameters by editing the ```install.bash``` file in the ```kibanaChoroplethMap``` folder. Then execute the command
 
-```$ ./install.bash```
+```$ ./install.bash path_to_elasticsearch_folder```
 
   For debugging:
 
@@ -52,6 +52,16 @@ This plugin integrates the possibility to create a new type of visualization for
 	For es_italy_provinces.json you should have Writes:113
 	For es_italy_municipalities.json you should have Writes:7998
 
+6. check if the kibana's version written in the package.json file is equal to your kibana's version. If not, change it appropriately.
+7. start your kibana (open a new terminal): ```$ path_to_kibana_folder/bin/kibana```
+8. the kibana's optimizations may take a few minutes . . .
+9. go to 'Management' -> 'index pattern'
+	9.1 click on 'add'
+	9.2 uncheck the 'Index contains time-based events' field
+	9.3 write 'world' in place of 'logstash-*'
+	9.4 click the 'create' button
+10. repeate point 9 but write 'name_of_the_index_containing_geo_referenced_data' in place of 'logstash-*'
+11. now you can use the Choropleth Map Visualization
 
 ### Usage
 
