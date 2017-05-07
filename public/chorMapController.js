@@ -479,7 +479,7 @@ define(function(require){
 
         //FIND FILTERS TO APPLY.
 
-        var filtersBar = ($route.current.scope.state != undefined)? $route.current.scope.state.filters:queryFilter.getFilters();
+        var filtersBar = queryFilter.getFilters();
         filter_query_string = ($route.current.scope.state != undefined)?$route.current.scope.state.query:$route.current.scope.model.query;
 
         for(var key in filtersBar){
