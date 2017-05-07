@@ -56,14 +56,13 @@ if [ ! -z "$VALID_NODE" ]; then
 			sed -i.bu $'129i\\\nelement[0].id = attrs.id;\n' ./node_modules/angular-leaflet-directive/dist/angular-leaflet-directive.js
 			rm ./node_modules/angular-leaflet-directive/dist/angular-leaflet-directive.js.bu
 			
-			printf "\nadding configuration lines to elasticsearch.yml...\n"
 			#this is necessary if you're working localhost.
-			cd "$1"/config
+			printf "\nadding configuration lines to elasticsearch.yml...\n"
 
-			printf "\n\nhttp.cors.enabled : true\n" >> elasticsearch.yml
-			printf "http.cors.allow-origin: \"*\"\n" >> elasticsearch.yml
-			printf "http.cors.allow-methods : OPTIONS, HEAD, GET, POST, PUT, DELETE\n" >> elasticsearch.yml
-			printf "http.cors.allow-headers : \"X-Requested-With,X-Auth-Token,Content-Type, Content-Length, Authorization, kbn-version\"\n" >> elasticsearch.yml
+			printf "\n\nhttp.cors.enabled : true\n" >> "$1"/config/elasticsearch.yml
+			printf "http.cors.allow-origin: \"*\"\n" >> "$1"/config/elasticsearch.yml
+			printf "http.cors.allow-methods : OPTIONS, HEAD, GET, POST, PUT, DELETE\n" >> "$1"/config/elasticsearch.yml
+			printf "http.cors.allow-headers : \"X-Requested-With,X-Auth-Token,Content-Type, Content-Length, Authorization, kbn-version\"\n" >> "$1"/config/elasticsearch.yml
 
 			printf "\nMapping...\n"
 			elasticdump --input=./elasticsearchData/mapping.json --output=http://$HOST:$PORT/$INDEX_NAME --type=mapping
