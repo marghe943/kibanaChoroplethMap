@@ -36,6 +36,7 @@ define(function(require){
 	module.service('client', function (esFactory) {
       return esFactory({
         host: 'http://'+window.host+':'+window.port,
+        requestTimeout:50000,
         log:'trace'
       });
     });
@@ -57,7 +58,7 @@ define(function(require){
         var filters_tot = [];
         var JSON_filters_tot = '';
         var inputQueryString = document.getElementsByClassName("kuiLocalSearchInput"); //the html element in which you can type a filter.
-
+        
         //GET FILES JSON OF BORDERS
         var Data_layers = {
             "countries":require('./utils/jsons/countries.json'),
@@ -67,15 +68,17 @@ define(function(require){
         };
 
         $scope.mapID = $scope.$parent.vis.title;
-        $scope.oldValuesOptions = {};
 
-        //you can avoid to execute queries if you've already done them with this layer and with a particular combination of geo_shape, geo_point fields and filters (see $scope.combinationAlreadVisualized)
-        var layerAlreadyVisualized = {
-            "countries":false,
-            "regions":false,
-            "italy_provinces":false,
-            "italy_municipalities":false
-        };
+        $scope.mapIDLayer = {
+            "countries":$scope.mapID+"_countries",
+            "regions":$scope.mapID+"_regions",
+            "italy_provinces":$scope.mapID+"_italy_provinces",
+            "italy_municipalities":$scope.mapID+"_italy_municipalities"
+        }
+
+        $scope.oldValuesOptions = {};
+        $scope.where_are_we = $scope.$parent.vis._editableVis != undefined ? 'visualization':'dashboard';
+        $scope.doneQuery = true; //to visualize the map at the beginning
 
         $scope.colorLegend = {
             "norm":{
@@ -145,47 +148,52 @@ define(function(require){
                 "index_chosen":' ',
                 "geo_shape_field":' ',
                 "geo_point_field":' ',
-                "filters":' '
+                "filters":' ',
+                "how_show_data":' ',
+                "normalized":' '
             },
             "regions":{
                 "index_chosen":' ',
                 "geo_shape_field":' ',
                 "geo_point_field":' ',
-                "filters":' '
+                "filters":' ',
+                "how_show_data":' ',
+                "normalized":' '
             },
             "italy_provinces":{
                 "index_chosen":' ',
                 "geo_shape_field":' ',
                 "geo_point_field":' ',
-                "filters":' '
+                "filters":' ',
+                "how_show_data":' ',
+                "normalized":' '
             },
             "italy_municipalities":{
                 "index_chosen":' ',
                 "geo_shape_field":' ',
                 "geo_point_field":' ',
-                "filters":' '
+                "filters":' ',
+                "how_show_data":' ',
+                "normalized":' '
             }
         };
 
         //CATCH EVENTS
+        for(var key in $scope.mapIDLayer){
+            $scope.$on("leafletDirectiveGeoJson."+$scope.mapIDLayer[key]+".mouseover", function(ev, leafletPayload) {
+                    console.log("MOUSEOVER");
+                    events.MouseOverEvent($scope,leafletPayload.leafletObject.feature, leafletPayload.leafletEvent);
+                });
+            
+            $scope.$on("leafletDirectiveGeoJson."+$scope.mapIDLayer[key]+".mouseout", function(ev, leafletPayload) {
+                    events.MouseOutEvent($scope, leafletPayload);
+                });
 
-        $scope.$on("leafletDirectiveGeoJson."+$scope.mapID+".mouseover", function(ev, leafletPayload) {
-                events.MouseOverEvent($scope,leafletPayload.leafletObject.feature, leafletPayload.leafletEvent);
-            });
-        
-        $scope.$on("leafletDirectiveGeoJson."+$scope.mapID+".mouseout", function(ev, leafletPayload) {
-                events.MouseOutEvent($scope, leafletPayload);
-            });
+            $scope.$on("leafletDirectiveGeoJson."+$scope.mapIDLayer[key]+".click", function(ev, leafletPayload) {
+                   events.ClickEvent($scope, leafletPayload, query, client,queryFilter);
+                });
 
-        $scope.$on("leafletDirectiveGeoJson."+$scope.mapID+".click", function(ev, leafletPayload) {
-               events.ClickEvent($scope, leafletPayload, query, client,queryFilter);
-            });
-
-        $scope.$on("leafletDirectiveMap."+$scope.mapID+".layeradd", function(ev, leafletPayload) {
-                if(layerAlreadyVisualized[$scope.layerChosen]){
-                    events.AddLayerEvent($scope, leafletPayload);
-                }
-            });
+        }
 
         //for filters from the filter_bar
         $scope.$listen(queryFilter, 'update', function (){
@@ -206,7 +214,11 @@ define(function(require){
 
             needFilters = (filters_tot.length != 0)? true:false;
             $scope.errorField = false;
+            $scope.doneQuery = false;
             query.makeQuery(client,$scope,Data_layers[$scope.layerChosen],leafletData,needFilters,filters_tot);
+
+            $scope.combinationAlreadVisualized[$scope.layerChosen]['filters'] = JSON.stringify(filters_tot);
+            $scope.oldValuesOptions[4] = JSON.stringify(filters_tot);
        
          });
 
@@ -236,30 +248,13 @@ define(function(require){
 
                 needFilters = (filters_tot.length != 0)? true:false;
                 $scope.errorField = false;
+                $scope.doneQuery = false;
                 query.makeQuery(client,$scope,Data_layers[$scope.layerChosen],leafletData,needFilters,filters_tot);
+
+                $scope.combinationAlreadVisualized[$scope.layerChosen]['filters'] = JSON.stringify(filters_tot);
+                $scope.oldValuesOptions[4] = JSON.stringify(filters_tot);
             }
         });
-
-        //if you're in a dashboard you could want to resize the panel and if you do it the leaflet map will resize.
-
-        //code from http://manos.malihu.gr/event-based-jquery-element-resize/
-        if($scope.$parent.vis._editableVis == undefined){ //you're in a dashboard
-            setTimeout(function(){ //we need this setTimeout because vis.html (containing <div id="{{mapID}}Resize" class = "resize"> ... </div>)
-                                    //is not loaded yet.
-               
-                Array.prototype.forEach.call(document.querySelectorAll("#"+$scope.mapID+"Resize"+" iframe"),function(el){
-                    (el.contentWindow || el).onresize=function(){
-
-                      leafletData.getMap($scope.mapID).then(function(map) {
-                            map.invalidateSize();
-                            map._resetView(map.getCenter(), map.getZoom(), true);   
-                        });
-
-                    }
-                  });
-
-            },200);
-        }
 
         var borders = {
             northEast: {
@@ -272,6 +267,7 @@ define(function(require){
             }
         };
 
+        if($scope.where_are_we == 'visualization'){
 		 angular.extend($scope, {
                 center: {
                     lat: 40.8471,
@@ -283,18 +279,124 @@ define(function(require){
                     tileLayer: 'https://api.tiles.mapbox.com/v4/mapbox.light/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw',
                     maxZoom: 10,
                     minZoom: 1
+                },
+                geojson_countries:{
+                    data:Data_layers["countries"],
+                    style:{
+                        fillColor:"transparent",
+                        color:"transparent",
+                        weight:1
+                    }
+                },
+                geojson_regions:{
+                    data:Data_layers["regions"],
+                    style:{
+                        fillColor:"transparent",
+                        color:"transparent",
+                        weight:1
+                    }
+                },
+                geojson_italy_provinces:{
+                    data:Data_layers["italy_provinces"],
+                    style:{
+                        fillColor:"transparent",
+                        color:"transparent",
+                        weight:1
+                    }
+                },
+                geojson_italy_municipalities:{
+                    data:Data_layers["italy_municipalities"],
+                    style:{
+                        fillColor:"transparent",
+                        color:"transparent",
+                        weight:1
+                    }
+                },
+                legend_countries:{},
+                legend_regions:{},
+                legend_italy_provinces:{},
+                legend_italy_municipalities:{}
+            });
+
+        }else{ //we're in a dashboard, so we can only load the layer that we've chosen in the saved Visualization.
+
+            angular.extend($scope, {
+                center: {
+                    lat: 40.8471,
+                    lng: 14.0625,
+                    zoom: 2
+                },
+                maxbounds: borders,
+                defaults:{
+                    tileLayer: 'https://api.tiles.mapbox.com/v4/mapbox.light/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw',
+                    maxZoom: 10,
+                    minZoom: 1
+                },
+                geojson_countries:{},
+                geojson_regions:{},
+                geojson_italy_provinces:{},
+                geojson_italy_municipalities:{},
+                legend_countries:{},
+                legend_regions:{},
+                legend_italy_provinces:{},
+                legend_italy_municipalities:{}
+            });
+
+            $scope["geojson_"+$scope.vis.params.layer]["data"] = Data_layers[$scope.vis.params.layer];
+            $scope["geojson_"+$scope.vis.params.layer]["style"] = {
+                                                                        fillColor:"transparent",
+                                                                        color:"transparent",
+                                                                        weight:1
+                                                                    };
+
+        }
+
+        //If you're in a dashboard you could want to resize the panel and if you do it the leaflet map will resize.
+
+        if($scope.where_are_we == 'dashboard'){
+            var resizeDashboardMapInterval = setInterval(resizeDashboardMap,500);
+
+            function resizeDashboardMap(){
+                if(document.getElementById($scope.mapIDLayer[$scope.vis.params.layer]+"Resize") != null){
+
+                    //code from http://manos.malihu.gr/event-based-jquery-element-resize/
+                    Array.prototype.forEach.call(document.querySelectorAll("#"+$scope.mapIDLayer[$scope.vis.params.layer]+"Resize"+" iframe"),function(el){
+                        (el.contentWindow || el).onresize=function(){
+
+                          leafletData.getMap($scope.mapIDLayer[$scope.vis.params.layer]).then(function(map) {
+                                map.invalidateSize();
+                                map._resetView(map.getCenter(), map.getZoom(), true);   
+                            });
+
+                        }
+                      });
+                    console.log("Clear interval");
+                    window.clearInterval(resizeDashboardMapInterval);
                 }
-            });
+            };
+        }
 
-        //TO ADJUST THE SIZE OF THE MAP
-        leafletData.getMap($scope.mapID).then(function(map) {
-                setTimeout(function() {
-                    map.invalidateSize();
-                    map._resetView(map.getCenter(), map.getZoom(), true);   
-                }, 200);
-            });
+        //TO ADJUST THE SIZE OF THE 4 MAPS (one for each layer)
+        var adjustMapSizeInterval = setInterval(adjustMapSize,500);
 
+        function adjustMapSize(){
+            var next = 0;
+            for(var key in $scope.mapIDLayer){
+                if(document.getElementById($scope.mapIDLayer[key]) != null){
+                    leafletData.getMap($scope.mapIDLayer[key]).then(function(map) {
+                            map.invalidateSize();
+                            map._resetView(map.getCenter(), map.getZoom(), true);   
+                        });
+                    next++;
+                }
 
+            }
+            //if $scope.where_are_we == 'visualization', then we have 4 maps (countries,regions,italy_provinces,italy_municipalities)
+            //if $scope.where_are_we == 'dashboard', then we only have 1 map (the one corresponding to the vis.params.layer variable)
+            if(($scope.where_are_we == 'visualization' && next == 4) || ($scope.where_are_we == 'dashboard' && next == 1))
+                window.clearInterval(adjustMapSizeInterval);
+        };
+       
         //WATCH INDEX PATTERN CHANGING
 
         $scope.$watch('vis.indexPattern.id',function(id){
@@ -307,13 +409,7 @@ define(function(require){
             $scope.oldValuesOptions[2] = ''; //geo_point_field
             $scope.oldValuesOptions[3] = ''; //index_chosen
             $scope.oldValuesOptions[4] = ''; //JSON filters
-            layerAlreadyVisualized = {
-                "countries":false,
-                "regions":false,
-                "italy_provinces":false,
-                "italy_municipalities":false
-            };
-            
+       
             $scope.intervalsLegend = {
                 "norm":{
                     "countries":{
@@ -375,16 +471,16 @@ define(function(require){
 
         });
 
-        if($scope.$parent.vis._editableVis == undefined){ //you're in a dashboard
+        if($scope.where_are_we == 'dashboard'){ //you're in a dashboard
             //search geopoint and geoshape fields in .kibana index.
-            //For some reasons Kibana doesn't save the geopoint and geoshape fields inside $scope.vis.params.geoShapeField and $scope.vis.params.geoPointField
+            //For some unknown reasons Kibana doesn't save the geopoint and geoshape fields inside $scope.vis.params.geoShapeField and $scope.vis.params.geoPointField
             query.queryKibanaIndex($scope,client); 
         }    
 
-        //FIND FILTERS TO APPLY. $route.current.scope.state == undefined means that we are in a dashboard, where $route.current.scope.model is defined instead.
+        //FIND FILTERS TO APPLY. In a dashboard $route.current.scope.model is defined instead of $route.current.scope.state
 
-        var filtersBar = ($route.current.scope.state != undefined)? $route.current.scope.state.filters:queryFilter.getFilters();
-        filter_query_string = ($route.current.scope.state != undefined)?$route.current.scope.state.query:$route.current.scope.model.query;
+        var filtersBar = ($scope.where_are_we == 'visualization')? $route.current.scope.state.filters:queryFilter.getFilters();
+        filter_query_string = ($scope.where_are_we == 'visualization')?$route.current.scope.state.query:$route.current.scope.model.query;
 
         for(var key in filtersBar){
             filters_bar.push(filtersBar[key]);
@@ -396,7 +492,6 @@ define(function(require){
         
         needFilters = (filters_tot.length != 0)? true:false;
 
-        //console.log($route.current.scope);
         
         //WATCH OPTION FIELDS
 
@@ -413,20 +508,18 @@ define(function(require){
 
                 //for debugging
                 console.log("JSON stringify: "+JSON_filters_tot);
-                console.log("FILTERS_TOT_WATCH");
-                console.log(filters_tot);
-                console.log("oldValues ...: "+oldValues[0] + ","+oldValues[1] + ","+oldValues[2] + ","+oldValues[3] + ","+oldValues[4] + ","+oldValues[5] + ","+oldValues[6]);
                 console.log("oldValues: " + $scope.oldValuesOptions[0] + ' ,' + $scope.oldValuesOptions[1] + ' ,' + $scope.oldValuesOptions[2] + ' ,' + $scope.oldValuesOptions[3] + ' ,' + $scope.oldValuesOptions[4]);
-                console.log("newValues: " + newValues[0] + ' ,' + newValues[1] + ' ,' + newValues[2] + ' ,' + newValues[3] + ' ,' + newValues[4] + ' ,' + newValues[5] + ' ,'+newValues[6]);
+                console.log("newValues: " + newValues[0] + ' ,' + newValues[1] + ' ,' + newValues[2] + ' ,' + newValues[3] + ' ,' + newValues[4] + ' ,' + newValues[5]);
 
                 if((newValues[1] != '') && (newValues[2] != '') && (newValues[5] != '')){
                     $scope.errorField = false;
+                    $scope.doneQuery = false;
 
                     if($scope.how_show_data == "customizable"){
 
                         if($scope.vis.params.ranges.length == 0){
                             $scope.errorField = true;
-                            $scope.textError = "YOU HAVE TO CHOSE AT LEAST ONE RANGE.";
+                            $scope.textError = "YOU HAVE TO CHOOSE AT LEAST ONE RANGE.";
                             return;
                         }
 
@@ -454,44 +547,46 @@ define(function(require){
 
                         $scope.map.setIntervals($scope.layerChosen,norm,'customizable',intervals);
 
-                        //for debugging
-                        console.log($scope.colorLegend);
-                        console.log($scope.intervalsLegend);
-                        console.log($scope.map.getIntervals($scope.layerChosen,norm,'customizable'));
-
                     }
-                    
-                    if ((newValues[0] == $scope.oldValuesOptions[0]) && (newValues[1] == $scope.oldValuesOptions[1]) && (newValues[2] == $scope.oldValuesOptions[2]) && (newValues[5] == $scope.oldValuesOptions[3]) && (JSON_filters_tot == $scope.oldValuesOptions[4])){ //
+                   
+                   if ((newValues[0] == $scope.oldValuesOptions[0]) && (newValues[1] == $scope.oldValuesOptions[1]) && (newValues[2] == $scope.oldValuesOptions[2]) && (newValues[5] == $scope.oldValuesOptions[3]) && (JSON_filters_tot == $scope.oldValuesOptions[4])){ //
+                       
                         console.log("change style");
+                        
+                        $scope.doneQuery = true;
+                        $scope.combinationAlreadVisualized[$scope.layerChosen]['how_show_data'] = newValues[4];
+                        $scope.combinationAlreadVisualized[$scope.layerChosen]['normalized'] = newValues[3];
 
-                        angular.extend($scope,{
-                            legend:{
-                                    colors: $scope.colorLegend[norm][$scope.how_show_data],
-                                    labels: $scope.intervalsLegend[norm][$scope.layerChosen][$scope.how_show_data]
-                            }
-                        });
-
+                        $scope["legend_"+$scope.layerChosen] = {
+                                                                    colors: $scope.colorLegend[norm][$scope.how_show_data],
+                                                                    labels: $scope.intervalsLegend[norm][$scope.layerChosen][$scope.how_show_data]
+                                                                };
                         events.changeStyle($scope,leafletData);
 
                     }else{
-                        console.log("request");
+                        
+                        if(($scope.combinationAlreadVisualized[$scope.layerChosen]['geo_shape_field'] == newValues[1]) && ($scope.combinationAlreadVisualized[$scope.layerChosen]['geo_point_field'] == newValues[2]) && ($scope.combinationAlreadVisualized[$scope.layerChosen]['index_chosen'] == newValues[5]) && ($scope.combinationAlreadVisualized[$scope.layerChosen]['filters'] == JSON_filters_tot) && ($scope.combinationAlreadVisualized[$scope.layerChosen]['how_show_data'] == newValues[4]) && ($scope.combinationAlreadVisualized[$scope.layerChosen]['normalized'] == newValues[3])){ //only layer has changed
+                            
+                            console.log("data are available for the combination chosen");
+                            
+                            $scope.doneQuery = true;
+                            $scope["legend_"+$scope.layerChosen] = {
+                                                                    colors: $scope.colorLegend[norm][$scope.how_show_data],
+                                                                    labels: $scope.intervalsLegend[norm][$scope.layerChosen][$scope.how_show_data]
+                                                                };
 
-                        var data = $scope.map.getJsonData($scope.layerChosen);
-                        if(data != undefined && ($scope.combinationAlreadVisualized[$scope.layerChosen]['geo_shape_field'] == newValues[1]) && ($scope.combinationAlreadVisualized[$scope.layerChosen]['geo_point_field'] == newValues[2]) && ($scope.combinationAlreadVisualized[$scope.layerChosen]['index_chosen'] == newValues[5]) && ($scope.combinationAlreadVisualized[$scope.layerChosen]['filters'] == JSON_filters_tot)){ //only layer has changed
-                            console.log("data are available for " + $scope.layerChosen + "with " + newValues[1] + " and " + newValues[2]);
-                            layerAlreadyVisualized[$scope.layerChosen] = true;
-
-                            angular.extend($scope,{
-                                legend:{
-                                        colors: $scope.colorLegend[norm][$scope.how_show_data],
-                                        labels: $scope.intervalsLegend[norm][$scope.layerChosen][$scope.how_show_data]
-                                }
-                            });
+                            setTimeout(function(){
+                                leafletData.getMap($scope.mapIDLayer[newValues[0]]).then(function(map) {
+                                    console.log("RESIZE");
+                                    map.invalidateSize();
+                                    map._resetView(map.getCenter(), map.getZoom(), true);   
+                                });
+                            },200);
         
-                            $scope.geojson.data = data;
+                            
                         }
                         else{
-                            console.log("data are NOT available for " + $scope.layerChosen + "with " + newValues[1] + " and " + newValues[2]);
+                            console.log("data are NOT available for the combination chosen");
                             query.makeQuery(client,$scope,Data_layers[$scope.layerChosen],leafletData,needFilters,filters_tot);
                         }
 
@@ -504,12 +599,14 @@ define(function(require){
                         $scope.combinationAlreadVisualized[$scope.layerChosen]['geo_point_field'] = newValues[2];
                         $scope.combinationAlreadVisualized[$scope.layerChosen]['index_chosen'] = newValues[5];
                         $scope.combinationAlreadVisualized[$scope.layerChosen]['filters'] = JSON_filters_tot;
+                        $scope.combinationAlreadVisualized[$scope.layerChosen]['how_show_data'] = newValues[4];
+                        $scope.combinationAlreadVisualized[$scope.layerChosen]['normalized'] = newValues[3];
 
                     }
                 }
                 else if(!initialization){
                         $scope.errorField = true;
-                        $scope.textError = "YOU HAVE TO CHOSE THE INDEX WHICH WILL BE USED FOR THE GEO_SHAPE QUERY, A GEO_SHAPE FIELD AND A GEO_POINT FIELD.";
+                        $scope.textError = "YOU HAVE TO CHOOSE THE INDEX WHICH WILL BE USED FOR THE GEO_SHAPE QUERY, A GEO_SHAPE FIELD AND A GEO_POINT FIELD.";
                     }else{
                         initialization = false;
                     }

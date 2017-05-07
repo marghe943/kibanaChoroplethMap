@@ -19,13 +19,27 @@
 */-->
 <div class="controller" ng-controller="ChorMapController" style="height:100%;width:100%;position: absolute;">
 	<div id="container" ng-if="!errorField" class="container" style="height:100%; width:100%;">
-		<leaflet id={{mapID}} maxbounds="maxbounds" legend="legend" lf-center="center" defaults="defaults" geojson="geojson" events="events"></leaflet>
+		<div class="leafletContainer" style="height:100%; width:100%;" ng-show="(vis.params.layer == 'countries') && doneQuery" ng-if="(where_are_we == 'visualization') || ((where_are_we == 'dashboard')&&(vis.params.layer == 'countries'))">
+            <leaflet id="{{mapID}}_countries" maxbounds="maxbounds" legend="legend_countries" lf-center="center" defaults="defaults" geojson="geojson_countries" events="events"></leaflet>
+        </div>
+        <div class="leafletContainer" style="height:100%; width:100%;" ng-show="(vis.params.layer == 'regions') && doneQuery" ng-if="(where_are_we == 'visualization') || ((where_are_we == 'dashboard')&&(vis.params.layer == 'regions'))">
+            <leaflet id="{{mapID}}_regions" maxbounds="maxbounds" legend="legend_regions" lf-center="center" defaults="defaults" geojson="geojson_regions" events="events"></leaflet>
+        </div>
+        <div class="leafletContainer" style="height:100%; width:100%;" ng-show="(vis.params.layer == 'italy_provinces') && doneQuery" ng-if="(where_are_we == 'visualization') || ((where_are_we == 'dashboard')&&(vis.params.layer == 'italy_provinces'))">
+            <leaflet id="{{mapID}}_italy_provinces" maxbounds="maxbounds" legend="legend_italy_provinces" lf-center="center" defaults="defaults" geojson="geojson_italy_provinces" events="events"></leaflet>
+        </div>
+        <div class="leafletContainer" style="height:100%; width:100%;" ng-show="(vis.params.layer == 'italy_municipalities') && doneQuery" ng-if="(where_are_we == 'visualization') || ((where_are_we == 'dashboard')&&(vis.params.layer == 'italy_municipalities'))">
+            <leaflet id="{{mapID}}_italy_municipalities" maxbounds="maxbounds" legend="legend_italy_municipalities" lf-center="center" defaults="defaults" geojson="geojson_italy_municipalities" events="events"></leaflet>
+        </div>
 		<div class="info">{{selected}} : {{how_many}}</div>
-		<div id ="{{mapID}}Resize" class="resize">
+		<div id ="{{mapID}}_{{vis.params.layer}}Resize" class="resize">
 			<iframe></iframe><iframe></iframe>
 		</div>
 	</div>
-	<div class="error" ng-if="errorField">
-		<p id="errorPar">Error in index "{{indexChosen}}" : {{textError}} </p>
+	<div ng-if="errorField">
+		<p class="attention" id="errorPar">Error in index "{{indexChosen}}" : {{textError}} </p>
 	</div>
+    <div ng-if="!doneQuery">
+        <p class="attention" id="waitQuery">WAIT FOR THE QUERY TO BE COMPLETED . . .</p>
+    </div>
 </div>
