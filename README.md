@@ -47,20 +47,20 @@ This plugin integrates the possibility to create a new type of visualization for
 
 For debugging:
 
-For es_countries.json you should have Writes:254
-For es_regions.json you should have Writes:3609
-For es_italy_provinces.json you should have Writes:113
-For es_italy_municipalities.json you should have Writes:7998
+For es_countries.json you should have Writes:254 
+For es_regions.json you should have Writes:3609  
+For es_italy_provinces.json you should have Writes:113  
+For es_italy_municipalities.json you should have Writes:7998  
 
 6. close Elasticsearch (ctrl + C) and restart it: ```$ path_to_elasticsearch_folder/bin/elasticsearch```
 7. check if the kibana's version written in the package.json file is equal to your kibana's version. If not, change it appropriately.
 8. start your kibana (open a new terminal): ```$ path_to_kibana_folder/bin/kibana```
 9. the kibana's optimizations may take a few minutes . . .
-10. go to 'Management' -> 'index pattern'
-10.1 click on 'add'
-10.2 uncheck the 'Index contains time-based events' field
-10.3 write 'world' in place of 'logstash-*'
-10.4 click the 'create' button
+10. go to 'Management' -> 'index pattern'  
+  10.1 click on 'add'
+  10.2 uncheck the 'Index contains time-based events' field
+  10.3 write 'world' in place of 'logstash-*'
+  10.4 click the 'create' button
 11. repeate point 9 but write 'name_of_the_index_containing_geo_referenced_data' in place of 'logstash-*'
 12. now you can use the Choropleth Map Visualization
 
