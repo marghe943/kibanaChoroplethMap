@@ -46,11 +46,24 @@ if [ ! -z "$VALID_NODE" ]; then
 			
 			#creates the 'node_modules' folder and installs the dependencies in it
 			npm install
+			
+			printf "\ncreating conf.js file...\n"
+			printf "window.host = \"$HOST\";\n" > conf.js
+			printf "window.port = \"$PORT\";\n" >> conf.js
 
 			#add a line to the file 'angular-leaflet-directive.js' to solve the problem for which you couldn't change dynamically the leaflet map's id
 			#now you can use kibana's dashboard with more then one chorMap plugin.
 			sed -i.bu $'129i\\\nelement[0].id = attrs.id;\n' ./node_modules/angular-leaflet-directive/dist/angular-leaflet-directive.js
 			rm ./node_modules/angular-leaflet-directive/dist/angular-leaflet-directive.js.bu
+			
+			printf "\nadding configuration lines to elasticsearch.yml...\n"
+			#this is necessary if you're working localhost.
+			cd "$1"/config
+
+			printf "\n\nhttp.cors.enabled : true\n" >> elasticsearch.yml
+			printf "http.cors.allow-origin: \"*\"\n" >> elasticsearch.yml
+			printf "http.cors.allow-methods : OPTIONS, HEAD, GET, POST, PUT, DELETE\n" >> elasticsearch.yml
+			printf "http.cors.allow-headers : \"X-Requested-With,X-Auth-Token,Content-Type, Content-Length, Authorization, kbn-version\"\n" >> elasticsearch.yml
 
 			printf "\nMapping...\n"
 			elasticdump --input=./elasticsearchData/mapping.json --output=http://$HOST:$PORT/$INDEX_NAME --type=mapping
@@ -62,19 +75,6 @@ if [ ! -z "$VALID_NODE" ]; then
 			elasticdump --input=./elasticsearchData/es_italy_provinces.json --output=http://$HOST:$PORT/$INDEX_NAME --type=data
 			printf "\nes_italy_municipalities...\n"
 			elasticdump --input=./elasticsearchData/es_italy_municipalities.json --output=http://$HOST:$PORT/$INDEX_NAME --type=data
-			
-			printf "\ncreating conf.js file...\n"
-			printf "window.host = \"$HOST\";\n" > conf.js
-			printf "window.port = \"$PORT\";\n" >> conf.js
-			
-			printf "\nadding configuration lines to elasticsearch.yml...\n"
-			#this is necessary if you're working localhost.
-			cd "$1"/config
-
-			printf "\n\nhttp.cors.enabled : true\n" >> elasticsearch.yml
-			printf "http.cors.allow-origin: \"*\"\n" >> elasticsearch.yml
-			printf "http.cors.allow-methods : OPTIONS, HEAD, GET, POST, PUT, DELETE\n" >> elasticsearch.yml
-			printf "http.cors.allow-headers : \"X-Requested-With,X-Auth-Token,Content-Type, Content-Length, Authorization, kbn-version\"\n" >> elasticsearch.yml
 			
 		else
 			echo "elasticdump not installed. Install elasticdump and retry."
