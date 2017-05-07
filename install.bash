@@ -87,4 +87,4 @@ else
 	echo "node not installed. Install node and retry."
 fi
 
-printf "\nIf you have interrupted this script or there's been an error, before executing it again, delete the conf.js file and the node_modules folder\n"
+printf "\nIf you have interrupted this script or there's been an error, before executing it again, delete the conf.js file, the node_modules folder and delete the 'world' index (curl -XDELETE 'localhost:9200/world?pretty') if elasticdump began.\n"
