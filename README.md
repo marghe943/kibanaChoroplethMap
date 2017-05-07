@@ -62,7 +62,8 @@ For es_italy_municipalities.json you should have Writes:7998
   10.3 write 'world' in place of 'logstash-*'  
   10.4 click the 'create' button  
 11. repeate point 9 but write 'name_of_the_index_containing_geo_referenced_data' in place of 'logstash-*'
-12. now you can use the Choropleth Map Visualization
+12. now you can use the Choropleth Map Visualization.
+13. NOTE: due to layers uploading you have to wait from 30s to 60s before you can use the Choropleth Map Visualization!
 
 ### Usage
 
