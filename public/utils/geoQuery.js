@@ -1,23 +1,3 @@
-/*	A KIBANA PLUGIN FOR CHOROPLETH MAPS
-    Copyright (C) 2017  Margherita Gambini
-
-   This file is part of choropleth_map.
-
-    choropleth_map is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    choropleth_map is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with choropleth_map.  If not, see <http://www.gnu.org/licenses/>.
-
-*/
-
 define(function (require){
 
 	return function geoQueryFactory(Private){
@@ -26,7 +6,7 @@ define(function (require){
 		var queryResult = {};
 		var intervals = [];
 		var colorLegendCustomizable = [];
-		var constScroll = 8000; //8000 only if you are using kibana in mod development. Change it to a lesser number with other kibana versions.
+		var constScroll = 500; //8000 only if you are using kibana in mod development. Change it to a lesser number with other kibana versions.
 		var constFixCoordinates = 5; //if in the function queryClickEvent(...) the resulting geo_bounding_box has top_left_lat == bottom_right_lat and/or
 									// top_left_lon == bottom_right_lon then we have to fix the coordinates to create a real box. We do this by
 									// incrementing the longitude and/or decrementing the latitude of the point bottom_right. We use Math.pow(10,constFixCoordinates)
@@ -88,25 +68,9 @@ define(function (require){
         }; 
 
 
-        /*I couldn't find a way to pass more parameters to "style" function other than feature, 
-        so I have to include it in geoQuery.js and event.js files together with getColor function.*/
-		function style(feature) {
-			var normalized = queryResult['normalized'];
-			var how_show_data = queryResult['how_show_data'];
-			console.log("STYLE");
-			
-            return {
-                fillColor: getColor(queryResult[feature.properties.NAME],normalized,how_show_data),
-                weight: 1,
-                opacity: 1,
-                color: '#969696',
-                fillOpacity: 1
-            };
-        };	
-
 		function QueryJSON(scope){
 
-			this.queryKibana = '{\"index\":\".kibana\",\"type\":\"visualization\",\"body\":{\"query\":{\"match_all\":{}}}}';
+			this.queryKibana = '{\"index\":\".kibana\",\"type\":\"visualization\",\"body\":{\"size\":20,\"query\":{\"match_all\":{}}}}';
 			this.queryJsonIndexChosen = '{\"index\":\"' + scope.vis.indexPattern.id + '\",\"body\":{}}';
 			this.queryJsonWorld = '{\"index\":\"'+scope.vis.params.index_chosen+'\",\"type\":\"' + scope.layerChosen + '\",\"scroll\":\"10s\",\"body\":{}}';
 			this.queryGeoShape = '{\"index\":\"' + scope.vis.indexPattern.id + '\",\"body\":{\"size\":0,\"query\":{\"bool\":{\"must\":[]}},\"aggs\":{\"filter_agg\":{\"filters\":{\"filters\":{}}}}}}';
@@ -190,7 +154,9 @@ define(function (require){
 											    '}'+
 											'}'+
 										'}'+
-									'}';					  
+									'}';	
+
+			this.queryGeoShapeMS = '{\"body\":[]}';				  
 		}
 
 		function createQuery(queryJson,string_to_insert,regexp){
@@ -206,9 +172,15 @@ define(function (require){
 		    }
 		};
 
-		function createStringGeoShape(id,scope){
-			var str = '\"'+id+'\"'+':{\"geo_shape\": {\"'+scope.vis.params.geoShapeField+'\": {\"indexed_shape\": {\"id\": \"'+id+'\",\"type\": \"'+scope.layerChosen+'\",\"index\": \"'+scope.vis.params.index_chosen+'\",\"path\":\"shape_coordinates\"}}}}';
-			return str;
+		function createStringGeoShape(id,scope,filters){
+
+			var str_index = '{\"index\":\"'+scope.vis.indexPattern.id+'\"},';
+			var str_query = '{\"query\":{\"bool\":{\"must\":[],\"filter\":{\"geo_shape\": {\"'+scope.vis.params.geoShapeField+'\": {\"indexed_shape\": {\"id\": \"'+id+'\",\"type\": \"'+scope.layerChosen+'\",\"index\": \"'+scope.vis.params.index_chosen+'\",\"path\":\"shape_coordinates\"}}}}}}}';
+			var obj_query = JSON.parse(str_query);
+			obj_query.query.bool.must = filters;
+			str_query = JSON.stringify(obj_query);
+
+			return str_index+str_query;
 		};
 
 		function insertEnvelope(query_to_edit,regexp,string_to_insert){
@@ -222,15 +194,33 @@ define(function (require){
 	        	return null;
 		};
 
-		function applyGeoJson(scope,jsonData,leafletData,response){
+		function obtainFiltersShapeQuery(filters){ //filters is an array of objects
+			console.log(filters);
+			var filters_to_return = [];
+			for(var i in filters){
+				for(var key in filters[i]){
+					if(key != "$$hashKey" && (key != "$state") && (key != "meta") && (key != "_proto_")){
+						console.log(filters[i][key]);
+						if(key == "query")
+							filters_to_return.push(filters[i][key]);
+						else{
+							var new_obj = {};
+							new_obj[key] = filters[i][key];
+							filters_to_return.push(new_obj);
+
+						}
+					}
+				}
+			}
+			return filters_to_return;
+		};
+
+		function applyGeoJson(scope,jsonData,leafletData,response,hits_ids){
 			queryResult={};
 			colorLegendCustomizable = [];
 
-	        for(var item_bucket in response.aggregations.filter_agg.buckets){
-	            var obj = response.aggregations.filter_agg.buckets[item_bucket];
-	            for(var prop in obj){
-	            	queryResult[item_bucket] = obj[prop];
-	            }
+	        for(var i in response){
+	        	queryResult[hits_ids[i]] = response[i].hits.total;
 	        }
 
 	        var norm = (scope.vis.params.normalized == "yes")?"norm":"notNorm";
@@ -246,39 +236,32 @@ define(function (require){
 
 	        intervals = scope.map.getIntervals(scope.layerChosen,norm,scope.how_show_data);
 	        queryResult = scope.map.getQueryResult(scope.layerChosen,norm,scope.how_show_data);
-	            	
-	        queryResult['normalized'] = scope.vis.params.normalized;
-	        queryResult['how_show_data'] = scope.how_show_data;
 
 	        if(scope.how_show_data == "customizable")
 	            for(var key in scope.colorLegend[norm][scope.how_show_data])
 	            	colorLegendCustomizable.push(scope.colorLegend[norm][scope.how_show_data][key]);
 
-	        angular.extend(scope,{
-	            legend:{
-                    colors: scope.colorLegend[norm][scope.how_show_data],
-                    labels: scope.intervalsLegend[norm][scope.layerChosen][scope.how_show_data]
-                }
-	        });
+	        scope["legend_"+scope.layerChosen] = {
+                                                    colors: scope.colorLegend[norm][scope.how_show_data],
+                                                    labels: scope.intervalsLegend[norm][scope.layerChosen][scope.how_show_data]
+                                                  };
+            
 
-	        if(scope.geojson != undefined){
-
-	            if(scope.geojson.data == jsonData){
-	               	console.log("scope.geojson.data == jsonData");
-
-	                leafletData.getMap(scope.mapID).then(function (map) {
-
+	        leafletData.getMap(scope.mapIDLayer[scope.vis.params.layer]).then(function (map) {
+	               
 						for(var key in map._layers){
 						    var obj = map._layers[key];
+
 						    if(obj.feature != undefined){
 
 						    	var color = getColor(queryResult[obj.feature.properties.NAME],scope.vis.params.normalized,scope.how_show_data);
 								
-								console.log(obj.feature.properties.NAME +" , "+color);
+								//console.log(obj.feature.properties.NAME +" , "+color);
 
 						    	obj.setStyle({
 						            weight:1,
 						            color:'#969696',
+						            fillOpacity:1,
 						            fillColor: getColor(queryResult[obj.feature.properties.NAME],scope.vis.params.normalized,scope.how_show_data)
 						        });
 						    }
@@ -286,30 +269,39 @@ define(function (require){
 
 					});
 	                	
-	                return;	
-	            }
-	        }
-
-		    angular.extend(scope, {
-	            geojson: {
-		            data: jsonData,
-		            style: style
-	            }
-	        });
+	
+		scope.doneQuery = true;
+	    
+	    setTimeout(function(){
+	                leafletData.getMap(scope.mapIDLayer[scope.vis.params.layer]).then(function(map) {
+	                console.log("RESIZE");
+	                map.invalidateSize();
+	                map._resetView(map.getCenter(), map.getZoom(), true);   
+        		});
+        },200);
+        
 	                
 		};
 
 		function queryHits(scope,client,jsonData,queryJson,hits_ids,leafletData,needFilters,filters){
 			var string_to_insert='';
+			var filters_to_apply = obtainFiltersShapeQuery(filters);
+			var how_many_query_done = 0;
+			var index_pos = 0;
+			var results = [];
+			var took = 0;
 
-			for(var i = 0; i<hits_ids.length;i++){
-				if(i == 0)
-					string_to_insert += createStringGeoShape(hits_ids[i],scope);
-				else 
-					string_to_insert += ',' + createStringGeoShape(hits_ids[i],scope);
+			for(var i = 0; i<hits_ids.length && i<900;i++){
+				if(i != (hits_ids.length -1) && i!=899)
+					string_to_insert += createStringGeoShape(hits_ids[i],scope,filters_to_apply)+',';
+				else
+					string_to_insert += createStringGeoShape(hits_ids[i],scope,filters_to_apply);
 			}
-	
-			var new_query_json = createQuery(queryJson.queryGeoShape,string_to_insert,"[}]{6}$");
+
+			if(i != hits_ids.length)
+				index_pos = 900;
+
+			var new_query_json = createQuery(queryJson.queryGeoShapeMS,string_to_insert,"]}");
 			
 			if(new_query_json == null){
 				console.error("Error in creating GEO_SHAPE_QUERY");
@@ -319,25 +311,65 @@ define(function (require){
 			}
 
 			new_query = JSON.parse(new_query_json);
-			new_query.body.query.bool.must = []; //clear filters.
 
-			if(needFilters){
-				console.log("NEED FILTERS HITS QUERY.");
-				addFilters(new_query,filters);
-
-			}
-
-			client.search(new_query, function (error, response) {
-            	if(error){
-            		console.error("Error in executing GEO_SHAPE_QUERY");
+			client.msearch(new_query,function executeAnotherQuery(error,response){
+				if(error){
+					console.error("Error in executing GEO_SHAPE_QUERY");
             		scope.errorField = true;
                 	scope.textError = "Error in executing GEO_SHAPE_QUERY. Maybe you have to choose another index for geo_shape query." + error;
             		return;
-            	}
-	            else{
-	            	applyGeoJson(scope,jsonData,leafletData,response);
-	            }
-        	});	
+				}else{
+					
+					console.log("QUERY HITS DONE");
+					//console.log(response);
+					how_many_query_done +=response.responses.length;
+					//console.log("how_many_query_done: "+how_many_query_done);
+					//console.log("hits_ids.length: "+hits_ids.length);
+
+					for(var i in response.responses){
+						took +=response.responses[i].took;
+						console.log(response.responses[i].took);
+					}
+
+					results = results.concat(response.responses);
+					//console.log(results);
+
+					if(how_many_query_done < hits_ids.length){
+						string_to_insert='';
+						for(var i = index_pos; i<hits_ids.length && i<(index_pos +900);i++){
+
+							if(i != (hits_ids.length -1) && i!=(index_pos+899))
+								string_to_insert += createStringGeoShape(hits_ids[i],scope,filters_to_apply)+',';
+							else
+								string_to_insert += createStringGeoShape(hits_ids[i],scope,filters_to_apply);
+						}
+						
+						if(i != hits_ids.length)
+							index_pos += 900;
+	
+						new_query_json = createQuery(queryJson.queryGeoShapeMS,string_to_insert,"]}");
+
+						if(new_query_json == null){
+							console.error("Error in creating GEO_SHAPE_QUERY");
+							scope.errorField = true;
+			                scope.textError = "Error in creating GEO_SHAPE_QUERY";
+							return;
+						}
+
+						new_query = JSON.parse(new_query_json);
+
+						client.msearch(new_query,executeAnotherQuery);
+
+					}
+					else{
+						console.log("ALL DONE");
+						/*console.log(results);
+						console.log(took);*/
+						applyGeoJson(scope,jsonData,leafletData,results,hits_ids);
+					}
+				}
+			});
+		
 		};
 
 
@@ -379,14 +411,14 @@ define(function (require){
 
 	            	console.log('response.hits.total: '+response.hits.total);
 	            	console.log('allRecords length: '+allRecords.length);
-					/*if (response.hits.total > allRecords.length) { //uncomment this line if you are not using kibana in mod development.
+					if (response.hits.total > allRecords.length) { //uncomment this line if you are not using kibana in mod development.
 					    
 						client.scroll({
 							scroll: '10s',
 							body: response._scroll_id
 					    }, getMoreUntilDone);
 					} else {
-					   	console.log('all done', allRecords);*/ //uncomment this line if you are not using kibana in mod development.
+					   	console.log('all done', allRecords); //uncomment this line if you are not using kibana in mod development.
 
 		            	var hits_ids=[];
 
@@ -397,12 +429,12 @@ define(function (require){
 		            	//console.log(hits_ids.length);
 
 		            	queryHits(scope,client,jsonData,queryJson,hits_ids,leafletData,needFilters,filters);
-	            	//} //uncomment this line if you are not using kibana in mod development.
+	            	} //uncomment this line if you are not using kibana in mod development.
 	            }
         	});
 		};
 
-		function addFilters(objQuery,filters){ //filters is an array of objects
+		function addFiltersMakeQuery(objQuery,filters){ //filters is an array of objects
 			console.log(filters);
 			for(var i in filters){
 				for(var key in filters[i]){
@@ -441,7 +473,7 @@ define(function (require){
 
 			if(needFilters){
 				console.log("NEED FILTERS MAKE QUERY.");
-				addFilters(new_query,filters);
+				addFiltersMakeQuery(new_query,filters);
 
 			}
 
@@ -473,25 +505,38 @@ define(function (require){
 		function queryKibanaIndex(scope,client){
 			var queryJson = new QueryJSON(scope);
 			new_query = JSON.parse(queryJson.queryKibana);
+			var how_many_visualization_checked = 0;
 
-			client.search(new_query,function(error,response){
+			client.search(new_query,function getMoreVisualization(error,response){
 				if(error){
 					console.error("Error executing QUERY ON KIBANA INDEX");
             		scope.errorField = true;
                 	scope.textError = "Error in executing QUERY ON KIBANA INDEX. \n" + error;
             		return;
 				}else{
-					//console.log("response kibana");
+					console.log("response kibana");
 					var hits_array = response.hits.hits;
 					var objVisState,visState;
 					for(var key in hits_array){
+
 						visState = hits_array[key]._source.visState;
 						objVisState = JSON.parse(visState);
+						console.log(objVisState.title);
+						console.log(scope.$parent.vis.title);
 						if(objVisState.title == scope.$parent.vis.title){
 							scope.vis.params.geoShapeField = objVisState.params.geoShapeField;
 							scope.vis.params.geoPointField = objVisState.params.geoPointField;
+							return;
 						}
 					}
+
+					how_many_visualization_checked += hits_array.length;
+					if(how_many_visualization_checked != response.hits.total){
+						client.scroll({
+							scroll: '10s',
+							body: response._scroll_id
+					    }, getMoreVisualization);	
+					} //uncomment if you're not using Kibana 6.0.0 !!!
 				}
 			});
 		};
@@ -518,7 +563,6 @@ define(function (require){
             		return;
 				}else{
 					console.log("queryClickEvent");
-					console.log(response);
 
 					if(response.aggregations.bound.bounds == undefined){
 	            		console.log("NO POINTS IN THIS geo_bounding_box");
@@ -543,8 +587,6 @@ define(function (require){
 			        };
 
 			        fixCoordinates(coordinates);
-			        console.log("coordinates");
-					console.log(coordinates);
 
 			        filter.geo_bounding_box[scope.vis.params.geoPointField] = {
 			          top_left: {lat: coordinates["latitude_left"], lon: coordinates["longitude_left"]},

@@ -55,13 +55,15 @@ define(function (require){
 
 		function getAvailableIndices(scope,client){
 			client.cat.indices({h:"index"},function(error,response){
+				console.log("error index");
+				console.log(error);
 				if(error == undefined){
 					var indexes = response.split(/\n/);
 					indexes.splice(indexes.length-1,1)
 					scope.vis.type.params.indexes_available=indexes;
 				}else{
 					scope.errorField = true;
-                    scope.textError = "THERE'S BEEN A PROBLEM FINDING OTHER INDEXES. TRY TO RELOAD.";
+                    scope.textError = "THERE'S BEEN A PROBLEM FINDING OTHER INDEXES. TRY TO RELOAD. "+error;
 				}
 			});
 		};

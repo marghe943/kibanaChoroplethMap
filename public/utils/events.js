@@ -109,6 +109,7 @@ define(function (require){
 				layer.setStyle({
 					weight: 1,
 					color:'#969696',
+          fillOpacity:1,
 					fillColor: getColor(queryResult[feature.properties.NAME],scope.vis.params.normalized,scope.how_show_data,scope.map.getIntervals(scope.layerChosen,norm,scope.how_show_data),scope.colorLegend[norm][scope.how_show_data])
 				});
 
@@ -130,6 +131,7 @@ define(function (require){
           layer.setStyle({
             weight: 1,
             color:'#969696',
+            fillOpacity:1,
             fillColor: getColor(queryResult[feature.properties.NAME],scope.vis.params.normalized,scope.how_show_data,scope.map.getIntervals(scope.layerChosen,norm,scope.how_show_data),scope.colorLegend[norm][scope.how_show_data]) //
           });
         }
@@ -137,7 +139,7 @@ define(function (require){
     };
 
 		function changeStyle(scope,leafletData){
-      leafletData.getMap(scope.mapID).then(function (map) {
+      leafletData.getMap(scope.mapIDLayer[scope.vis.params.layer]).then(function (map) {
           var norm = (scope.vis.params.normalized == "yes")?"norm":"notNorm";
 
           for(var key in map._layers){
@@ -150,6 +152,7 @@ define(function (require){
               obj.setStyle({
                 weight:1,
                 color:'#969696',
+                fillOpacity:1,
                 fillColor: getColor(queryResult[obj.feature.properties.NAME],scope.vis.params.normalized,scope.how_show_data,scope.map.getIntervals(scope.layerChosen,norm,scope.how_show_data),scope.colorLegend[norm][scope.how_show_data])
               });
             }
