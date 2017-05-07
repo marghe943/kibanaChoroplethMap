@@ -6,7 +6,7 @@ define(function (require){
 		var queryResult = {};
 		var intervals = [];
 		var colorLegendCustomizable = [];
-		var constScroll = 500; //8000 only if you are using kibana in mod development. Change it to a lesser number with other kibana versions.
+		var constScroll = 500; //8000 only if you are using kibana in mod development. Use a lesser number with other kibana versions.
 		var constFixCoordinates = 5; //if in the function queryClickEvent(...) the resulting geo_bounding_box has top_left_lat == bottom_right_lat and/or
 									// top_left_lon == bottom_right_lon then we have to fix the coordinates to create a real box. We do this by
 									// incrementing the longitude and/or decrementing the latitude of the point bottom_right. We use Math.pow(10,constFixCoordinates)
@@ -70,7 +70,7 @@ define(function (require){
 
 		function QueryJSON(scope){
 
-			this.queryKibana = '{\"index\":\".kibana\",\"type\":\"visualization\",\"body\":{\"size\":20,\"query\":{\"match_all\":{}}}}';
+			this.queryKibana = '{\"index\":\".kibana\",\"type\":\"visualization\",\"body\":{\"query\":{\"match_all\":{}}}}';
 			this.queryJsonIndexChosen = '{\"index\":\"' + scope.vis.indexPattern.id + '\",\"body\":{}}';
 			this.queryJsonWorld = '{\"index\":\"'+scope.vis.params.index_chosen+'\",\"type\":\"' + scope.layerChosen + '\",\"scroll\":\"10s\",\"body\":{}}';
 			this.queryGeoShape = '{\"index\":\"' + scope.vis.indexPattern.id + '\",\"body\":{\"size\":0,\"query\":{\"bool\":{\"must\":[]}},\"aggs\":{\"filter_agg\":{\"filters\":{\"filters\":{}}}}}}';
@@ -195,12 +195,12 @@ define(function (require){
 		};
 
 		function obtainFiltersShapeQuery(filters){ //filters is an array of objects
-			console.log(filters);
+			
 			var filters_to_return = [];
 			for(var i in filters){
 				for(var key in filters[i]){
 					if(key != "$$hashKey" && (key != "$state") && (key != "meta") && (key != "_proto_")){
-						console.log(filters[i][key]);
+						
 						if(key == "query")
 							filters_to_return.push(filters[i][key]);
 						else{
@@ -411,14 +411,14 @@ define(function (require){
 
 	            	console.log('response.hits.total: '+response.hits.total);
 	            	console.log('allRecords length: '+allRecords.length);
-					if (response.hits.total > allRecords.length) { //uncomment this line if you are not using kibana in mod development.
+					if (response.hits.total > allRecords.length) {
 					    
 						client.scroll({
 							scroll: '10s',
 							body: response._scroll_id
 					    }, getMoreUntilDone);
-					} else {
-					   	console.log('all done', allRecords); //uncomment this line if you are not using kibana in mod development.
+					} else { //comment from line 414 to this line if you are using kibana in mod development.
+					   	console.log('all done', allRecords); 
 
 		            	var hits_ids=[];
 
@@ -429,17 +429,17 @@ define(function (require){
 		            	//console.log(hits_ids.length);
 
 		            	queryHits(scope,client,jsonData,queryJson,hits_ids,leafletData,needFilters,filters);
-	            	} //uncomment this line if you are not using kibana in mod development.
+	            	} //comment this line if you are using kibana in mod development, and modify the constScroll variable to 8000.
 	            }
         	});
 		};
 
 		function addFiltersMakeQuery(objQuery,filters){ //filters is an array of objects
-			console.log(filters);
+			
 			for(var i in filters){
 				for(var key in filters[i]){
 					if(key != "$$hashKey" && (key != "$state") && (key != "meta") && (key != "_proto_")){
-						console.log(filters[i][key]);
+						
 						if(key == "query")
 							objQuery.body.query.bool.must.push(filters[i][key]);
 						else{
@@ -521,8 +521,7 @@ define(function (require){
 
 						visState = hits_array[key]._source.visState;
 						objVisState = JSON.parse(visState);
-						console.log(objVisState.title);
-						console.log(scope.$parent.vis.title);
+						
 						if(objVisState.title == scope.$parent.vis.title){
 							scope.vis.params.geoShapeField = objVisState.params.geoShapeField;
 							scope.vis.params.geoPointField = objVisState.params.geoPointField;
@@ -536,7 +535,7 @@ define(function (require){
 							scroll: '10s',
 							body: response._scroll_id
 					    }, getMoreVisualization);	
-					} //uncomment if you're not using Kibana 6.0.0 !!!
+					} //comment from line 533 to line 538 if you're using Kibana 6.0.0, and modify line 73 by adding \"size\":20, before \"query\"!!!
 				}
 			});
 		};
