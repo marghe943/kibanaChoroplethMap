@@ -43,7 +43,7 @@ This plugin integrates the possibility to create a new type of visualization for
 4. ```$ cd kibanaChoroplethMap```
 5. For default the plugin establishes a connection with elasticsearch on ```HOST="localhost"``` and on ```PORT="9200"```, but you can change these parameters by editing the ```install.bash``` file in the ```kibanaChoroplethMap``` folder. Then execute the command
 
-```$ ./install.bash path_to_elasticsearch_folder```
+```$ ./install.bash path_to_the_config_folder_of_elasticsearch```
 
 For debugging:
 
