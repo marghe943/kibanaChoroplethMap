@@ -45,23 +45,24 @@ This plugin integrates the possibility to create a new type of visualization for
 
 ```$ ./install.bash path_to_elasticsearch_folder```
 
-  For debugging:
+For debugging:
 
-	For es_countries.json you should have Writes:254
-	For es_regions.json you should have Writes:3609
-	For es_italy_provinces.json you should have Writes:113
-	For es_italy_municipalities.json you should have Writes:7998
+For es_countries.json you should have Writes:254
+For es_regions.json you should have Writes:3609
+For es_italy_provinces.json you should have Writes:113
+For es_italy_municipalities.json you should have Writes:7998
 
-6. check if the kibana's version written in the package.json file is equal to your kibana's version. If not, change it appropriately.
-7. start your kibana (open a new terminal): ```$ path_to_kibana_folder/bin/kibana```
-8. the kibana's optimizations may take a few minutes . . .
-9. go to 'Management' -> 'index pattern'
-	9.1 click on 'add'
-	9.2 uncheck the 'Index contains time-based events' field
-	9.3 write 'world' in place of 'logstash-*'
-	9.4 click the 'create' button
-10. repeate point 9 but write 'name_of_the_index_containing_geo_referenced_data' in place of 'logstash-*'
-11. now you can use the Choropleth Map Visualization
+6. close Elasticsearch (ctrl + C) and restart it: ```$ path_to_elasticsearch_folder/bin/elasticsearch```
+7. check if the kibana's version written in the package.json file is equal to your kibana's version. If not, change it appropriately.
+8. start your kibana (open a new terminal): ```$ path_to_kibana_folder/bin/kibana```
+9. the kibana's optimizations may take a few minutes . . .
+10. go to 'Management' -> 'index pattern'
+10.1 click on 'add'
+10.2 uncheck the 'Index contains time-based events' field
+10.3 write 'world' in place of 'logstash-*'
+10.4 click the 'create' button
+11. repeate point 9 but write 'name_of_the_index_containing_geo_referenced_data' in place of 'logstash-*'
+12. now you can use the Choropleth Map Visualization
 
 ### Usage
 
@@ -79,23 +80,23 @@ For example:
 INDEX MAPPING:
 
 ```json
-  {
-		...
-		"coordinates":{"type":"geo_point"},
-		"geo": { "type": "geo_shape","tree":"geohash","precision":"1m","points_only":true},
-		..
-	}
+{
+...
+"coordinates":{"type":"geo_point"},
+"geo": { "type": "geo_shape","tree":"geohash","precision":"1m","points_only":true},
+..
+}
 ```
 Read the ['Accuracy' section](https://www.elastic.co/guide/en/elasticsearch/reference/current/geo-shape.html) to understand how to set the precision field (anyway 1m is okay for our purpose);
 
 INDEX DATA:
 ```json
-	{
-		...
-		"coordinates":[9.491,51.2993],
-		"geo":{"type":"point","coordinates":[9.491,51.2993]},
-		...
-	}
+{
+...
+"coordinates":[9.491,51.2993],
+"geo":{"type":"point","coordinates":[9.491,51.2993]},
+...
+}
 ```
 
 Pay attention to how the coordinates are written: the geo_shape field always wants [lon,lat], instead the [geo_point](https://www.elastic.co/guide/en/elasticsearch/reference/current/geo-point.html) field can be written in several ways like "lat,lon" - [lon,lat] - "lat": latitude_number, "lon": longitude_number - as a geo_hash "drm3btev3e86"
@@ -115,49 +116,49 @@ To load that index on Elasticsearch (MAKE SURE YOU HAVE 'ELASTICDUMP' INSTALLED)
 
 - ChoroplethMap Visualization
 
-	![ChoroplethMap Visualization](./imgs_read/chorMapVis.png)
+![ChoroplethMap Visualization](./imgs_read/chorMapVis.png)
 
 - Select the index containing the georeferenced data (first modify it as explained previously)
 
-	![index with georeferenced data](./imgs_read/index_georeferenced.png)
+![index with georeferenced data](./imgs_read/index_georeferenced.png)
 
 - If the selected index doesn't contain any geo_point fields and/or geo_shape (of type point) fields then an error is shown. You have to create a new visualization and select a different index.
 
-	![no geo field](./imgs_read/nogeofield.png)
+![no geo field](./imgs_read/nogeofield.png)
 
-	Otherwise this screen is shown:
+Otherwise this screen is shown:
 
-	![first view](./imgs_read/firstView.png)
+![first view](./imgs_read/firstView.png)
 
 - Select the index containing the borders shapes, which was created while executing the script install.bash. For default is called WORLD.
 
-	![indexShape](./imgs_read/indexShape.png)
+![indexShape](./imgs_read/indexShape.png)
 
 - Choose if you want normalized data or not.
 
-	![normalized](./imgs_read/normalized.png)
+![normalized](./imgs_read/normalized.png)
 
 - Choose how to show data (in a linear, logarithmic or customizable way).
 
-	![how to show data](./imgs_read/howToShowData.png)
+![how to show data](./imgs_read/howToShowData.png)
 
-	- In the customizable way you can choose the ranges and the colors to display, but know that the data that will be shown are the linears ones: result/population (if normalized) or result (if not normalized). Usually if you want normalized data the results are >= 0 but < 1 .
+- In the customizable way you can choose the ranges and the colors to display, but know that the data that will be shown are the linears ones: result/population (if normalized) or result (if not normalized). Usually if you want normalized data the results are >= 0 but < 1 .
 
-	![customizable](./imgs_read/customizable.png)
+![customizable](./imgs_read/customizable.png)
 
-  ![choose Color](./imgs_read/chooseColor.png)
+![choose Color](./imgs_read/chooseColor.png)
 
-  Unfortunately on Safari you have to write the color yourself (es: "white", "rgb(255, 255, 255)" or "#ffffff")
+Unfortunately on Safari you have to write the color yourself (es: "white", "rgb(255, 255, 255)" or "#ffffff")
 
 - Choose the layer to show.
 
-	![layer](./imgs_read/layer.png)
+![layer](./imgs_read/layer.png)
 
 - Choose the geo_shape (of type point) field and the geo_point field (if you won't, an error will be shown)
 
-	![geo shape point](./imgs_read/geoShapePoint.png)
+![geo shape point](./imgs_read/geoShapePoint.png)
 
-	![geo point](./imgs_read/geoPoint.png)
+![geo point](./imgs_read/geoPoint.png)
 
 - Click the PLAY BUTTON
 
@@ -165,50 +166,50 @@ To load that index on Elasticsearch (MAKE SURE YOU HAVE 'ELASTICDUMP' INSTALLED)
 
 - Sometimes the queries can be really long, so you have to wait a little bit (maximum 30 seconds) for the data to be shown.
 
-	![visualization](./imgs_read/visualization.png)
+![visualization](./imgs_read/visualization.png)
 
 - if you move the mouse's pointer on a shape, the result (linear or logarithmic) will be displayed in the upper right corner.
 
-	![mouse over](./imgs_read/mouseOver.png)
+![mouse over](./imgs_read/mouseOver.png)
 
-  Note: if you choose the logarithmic displaying, where there's no data it will be shown "-Infinity" (as log(0) is not defined)
+Note: if you choose the logarithmic displaying, where there's no data it will be shown "-Infinity" (as log(0) is not defined)
 
-  ![infinity](./imgs_read/Infinity.png)
+![infinity](./imgs_read/Infinity.png)
 
 - You can use filters as in every visualization. Let's start from this:
 
-	![visualization for filters](./imgs_read/filterVis0.png)
+![visualization for filters](./imgs_read/filterVis0.png)
 
-  ![mouse over Rome's provinces](./imgs_read/filterVis1.png)
+![mouse over Rome's provinces](./imgs_read/filterVis1.png)
 
-	1) if you click on a shape which has some data, a geo_bounding_box, regarding that shape, will appear on the filter bar and the map will display only that clicked area. If that area doesn't containg data no filter will be shown.
+1) if you click on a shape which has some data, a geo_bounding_box, regarding that shape, will appear on the filter bar and the map will display only that clicked area. If that area doesn't containg data no filter will be shown.
 
-	![mouse clicked on Rome's provinces](./imgs_read/filterVis2.png)
+![mouse clicked on Rome's provinces](./imgs_read/filterVis2.png)
 
-	2) if you write a query_string in the "search" input than the results will change accordingly (sometimes you have to wait a little bit to see those changings, for the queries could be long)
+2) if you write a query_string in the "search" input than the results will change accordingly (sometimes you have to wait a little bit to see those changings, for the queries could be long)
 
-	![query filter user.lang:"es" with mouse over Rome's provinces](./imgs_read/queryString.png)
+![query filter user.lang:"es" with mouse over Rome's provinces](./imgs_read/queryString.png)
 
 #### Dashboard
 - Save a choroplethMap visualization and add it to a dashboard with other relatives visualizations.
 
-  ![dashboard](./imgs_read/dashboard.png)
+![dashboard](./imgs_read/dashboard.png)
 
 - The filters that appear by clicking on a visualization will be applied also to our choroplethMap (wait a little bit as usual)
 
-  ![filter user.lang:"it" with mouse over Rome's provinces](./imgs_read/filterIt.png)
+![filter user.lang:"it" with mouse over Rome's provinces](./imgs_read/filterIt.png)
 
-  Note: sometimes, when you choose a filter, there are no georeferenced data (the geo_point field is null). In this case an error will appear:
+Note: sometimes, when you choose a filter, there are no georeferenced data (the geo_point field is null). In this case an error will appear:
 
-  ![no data found](./imgs_read/noDataFound.png)
+![no data found](./imgs_read/noDataFound.png)
 
 - You can add more than one choropleth map visualization (**save them with different names**)
 
-  ![more than one chroMap visualization](./imgs_read/moreMaps.png)
+![more than one chroMap visualization](./imgs_read/moreMaps.png)
 
-  and add filters:
+and add filters:
 
-  ![more than one chroMap visualization with filters](./imgs_read/moreMapsFilterRome.png)
+![more than one chroMap visualization with filters](./imgs_read/moreMapsFilterRome.png)
 
 ### Contact
 marghe_943@yahoo.it
