@@ -56,6 +56,7 @@ define(function(require){
         var filter_query_string = {};
         var filters_bar = [];
         var filters_tot = [];
+        var filters_from_saved_vis = [];
         var JSON_filters_tot = '';
         var inputQueryString = document.getElementsByClassName("kuiLocalSearchInput"); //the html element in which you can type a filter.
         
@@ -190,7 +191,7 @@ define(function(require){
                 });
 
             $scope.$on("leafletDirectiveGeoJson."+$scope.mapIDLayer[key]+".click", function(ev, leafletPayload) {
-                   events.ClickEvent($scope, leafletPayload, query, client,queryFilter);
+                   events.ClickEvent($scope, leafletPayload, query, client,queryFilter,filters_from_saved_vis);
                 });
 
         }
@@ -200,11 +201,15 @@ define(function(require){
             var queryFilters = queryFilter.getFilters();
             filters_bar = []; //clear filter_bar
             filters_tot = []; //clear filter_tot
+            
             for (var key in queryFilters)
                 filters_bar.push(queryFilters[key]);
             
             for(var key in filters_bar)
                 filters_tot.push(filters_bar[key]);
+
+            for(var key in filters_from_saved_vis)
+                filters_tot.push(filters_from_saved_vis[key]);
 
             if(JSON.stringify(filter_query_string) != "{}") //not empty
                 filters_tot.push(filter_query_string);
@@ -240,6 +245,9 @@ define(function(require){
 
                 for(var key in filters_bar)
                     filters_tot.push(filters_bar[key]);
+
+                for(var key in filters_from_saved_vis)
+                    filters_tot.push(filters_from_saved_vis[key]);
 
                 filters_tot.push(filter_query_string);
 
@@ -393,6 +401,7 @@ define(function(require){
             }
             //if $scope.where_are_we == 'visualization', then we have 4 maps (countries,regions,italy_provinces,italy_municipalities)
             //if $scope.where_are_we == 'dashboard', then we only have 1 map (the one corresponding to the vis.params.layer variable)
+            
             if(($scope.where_are_we == 'visualization' && next == 4) || ($scope.where_are_we == 'dashboard' && next == 1))
                 window.clearInterval(adjustMapSizeInterval);
         };
@@ -474,11 +483,14 @@ define(function(require){
         if($scope.where_are_we == 'dashboard'){ //you're in a dashboard
             //search geopoint and geoshape fields in .kibana index.
             //For some unknown reasons Kibana doesn't save the geopoint and geoshape fields inside $scope.vis.params.geoShapeField and $scope.vis.params.geoPointField
-            query.queryKibanaIndex($scope,client); 
+            //if the user had saved some filters, we have to apply them (filters_from_saved_vis)
+            query.queryKibanaIndex($scope,client,filters_bar,filters_tot,filters_from_saved_vis); 
+              
         }    
 
         //FIND FILTERS TO APPLY.
 
+        console.log($route.current.scope);
         var filtersBar = queryFilter.getFilters();
         filter_query_string = ($route.current.scope.state != undefined)?$route.current.scope.state.query:$route.current.scope.model.query;
 
@@ -486,6 +498,9 @@ define(function(require){
             filters_bar.push(filtersBar[key]);
             filters_tot.push(filtersBar[key]);
         }
+
+        for(var key in filters_from_saved_vis)
+                filters_tot.push(filters_from_saved_vis[key]);
 
         if(JSON.stringify(filter_query_string) != "{}") //not empty
             filters_tot.push(filter_query_string);

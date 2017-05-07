@@ -39,7 +39,7 @@
 	<div ng-if="errorField">
 		<p class="attention" id="errorPar">Error in index "{{indexChosen}}" : {{textError}} </p>
 	</div>
-    <div ng-if="!doneQuery">
+    <div ng-if="(!doneQuery && !errorField)">
         <p class="attention" id="waitQuery">WAIT FOR THE QUERY TO BE COMPLETED . . .</p>
     </div>
 </div>
