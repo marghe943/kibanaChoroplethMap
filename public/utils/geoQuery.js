@@ -6,7 +6,7 @@ define(function (require){
 		var queryResult = {};
 		var intervals = [];
 		var colorLegendCustomizable = [];
-		var constScroll = 500; //8000 only if you are using kibana in mod development. Use a lesser number with other kibana versions.
+		var constScroll = 500; //8000 only if you are using kibana in mod development. Change it to a lesser number with other kibana versions.
 		var constFixCoordinates = 5; //if in the function queryClickEvent(...) the resulting geo_bounding_box has top_left_lat == bottom_right_lat and/or
 									// top_left_lon == bottom_right_lon then we have to fix the coordinates to create a real box. We do this by
 									// incrementing the longitude and/or decrementing the latitude of the point bottom_right. We use Math.pow(10,constFixCoordinates)
@@ -130,6 +130,7 @@ define(function (require){
 											'\"size\": 0,'+ 
 											'\"query\":{'+
 												'\"bool\": {'+
+												'\"must\":[],'+
 											      '\"filter\": {'+
 											        '\"geo_shape\": {'+
 											          '\"'+scope.vis.params.geoShapeField+'\": {'+
@@ -195,12 +196,12 @@ define(function (require){
 		};
 
 		function obtainFiltersShapeQuery(filters){ //filters is an array of objects
-			
+			console.log(filters);
 			var filters_to_return = [];
 			for(var i in filters){
 				for(var key in filters[i]){
 					if(key != "$$hashKey" && (key != "$state") && (key != "meta") && (key != "_proto_")){
-						
+						console.log(filters[i][key]);
 						if(key == "query")
 							filters_to_return.push(filters[i][key]);
 						else{
@@ -417,8 +418,8 @@ define(function (require){
 							scroll: '10s',
 							body: response._scroll_id
 					    }, getMoreUntilDone);
-					} else { //comment from line 414 to this line if you are using kibana in mod development.
-					   	console.log('all done', allRecords); 
+					} else {
+					   	console.log('all done', allRecords); //comment from the line 'if (response.hits.total > allRecords.length) {' to this line if you are using kibana in mod development.
 
 		            	var hits_ids=[];
 
@@ -429,17 +430,17 @@ define(function (require){
 		            	//console.log(hits_ids.length);
 
 		            	queryHits(scope,client,jsonData,queryJson,hits_ids,leafletData,needFilters,filters);
-	            	} //comment this line if you are using kibana in mod development, and modify the constScroll variable to 8000.
+	            	} //comment this line if you are using kibana in mod development.
 	            }
         	});
 		};
 
-		function addFiltersMakeQuery(objQuery,filters){ //filters is an array of objects
-			
+		function addFilters(objQuery,filters){ //filters is an array of objects
+			console.log(filters);
 			for(var i in filters){
 				for(var key in filters[i]){
 					if(key != "$$hashKey" && (key != "$state") && (key != "meta") && (key != "_proto_")){
-						
+						console.log(filters[i][key]);
 						if(key == "query")
 							objQuery.body.query.bool.must.push(filters[i][key]);
 						else{
@@ -473,7 +474,7 @@ define(function (require){
 
 			if(needFilters){
 				console.log("NEED FILTERS MAKE QUERY.");
-				addFiltersMakeQuery(new_query,filters);
+				addFilters(new_query,filters);
 
 			}
 
@@ -502,7 +503,7 @@ define(function (require){
         	});
 		};
 
-		function queryKibanaIndex(scope,client){
+		function queryKibanaIndex(scope,client,filters_bar,filters_tot,filters_from_saved_vis){
 			var queryJson = new QueryJSON(scope);
 			new_query = JSON.parse(queryJson.queryKibana);
 			var how_many_visualization_checked = 0;
@@ -520,11 +521,24 @@ define(function (require){
 					for(var key in hits_array){
 
 						visState = hits_array[key]._source.visState;
+						searchSourceJSON = hits_array[key]._source.kibanaSavedObjectMeta.searchSourceJSON;
 						objVisState = JSON.parse(visState);
-						
+				
 						if(objVisState.title == scope.$parent.vis.title){
+							console.log(hits_array[key]._source.kibanaSavedObjectMeta.searchSourceJSON);
+							
+							objSearchSourceJSON = JSON.parse(searchSourceJSON);
+							if(objSearchSourceJSON.filter.length != 0){
+								for(var key in objSearchSourceJSON.filter){
+					                filters_bar.push(objSearchSourceJSON.filter[key]);
+					                filters_tot.push(objSearchSourceJSON.filter[key]);
+					                filters_from_saved_vis.push(objSearchSourceJSON.filter[key]);
+					            }
+							}
+
 							scope.vis.params.geoShapeField = objVisState.params.geoShapeField;
 							scope.vis.params.geoPointField = objVisState.params.geoPointField;
+							
 							return;
 						}
 					}
@@ -535,7 +549,7 @@ define(function (require){
 							scroll: '10s',
 							body: response._scroll_id
 					    }, getMoreVisualization);	
-					} //comment from line 533 to line 538 if you're using Kibana 6.0.0, and modify line 73 by adding \"size\":20, before \"query\"!!!
+					} //comment from line 'if(how_many_visualization_checked != response.hits.total){' to this line if you're using Kibana 6.0.0 ; then add \"size\":a_number_equal_to_the_vis_saved, before \"query\" to the this.queryKibana variable.
 				}
 			});
 		};
@@ -549,10 +563,16 @@ define(function (require){
 			}
 		}
 
-		function queryClickEvent(scope,client,queryFilter){
+		function queryClickEvent(scope,client,queryFilter,filters_from_saved_vis){
 			var queryJson = new QueryJSON(scope);
-			new_query = JSON.parse(queryJson.queryClickShape);
 			var coordinates = {};
+			new_query = JSON.parse(queryJson.queryClickShape);
+
+			if(filters_from_saved_vis.length != 0){
+				console.log("NEED FILTERS QUERY CLICKED EVENT.");
+				addFilters(new_query,filters_from_saved_vis);
+
+			}
 
 			client.search(new_query,function(error,response){
 				if(error){
