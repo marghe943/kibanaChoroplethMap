@@ -477,10 +477,10 @@ define(function(require){
             query.queryKibanaIndex($scope,client); 
         }    
 
-        //FIND FILTERS TO APPLY. In a dashboard $route.current.scope.model is defined instead of $route.current.scope.state
+        //FIND FILTERS TO APPLY.
 
-        var filtersBar = ($scope.where_are_we == 'visualization')? $route.current.scope.state.filters:queryFilter.getFilters();
-        filter_query_string = ($scope.where_are_we == 'visualization')?$route.current.scope.state.query:$route.current.scope.model.query;
+        var filtersBar = ($route.current.scope.state != undefined)? $route.current.scope.state.filters:queryFilter.getFilters();
+        filter_query_string = ($route.current.scope.state != undefined)?$route.current.scope.state.query:$route.current.scope.model.query;
 
         for(var key in filtersBar){
             filters_bar.push(filtersBar[key]);
