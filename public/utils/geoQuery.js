@@ -416,7 +416,9 @@ define(function (require){
 					    
 						client.scroll({
 							scroll: '10s',
-							body: response._scroll_id
+							body: {
+								"scroll_id":[response._scroll_id]
+							}
 					    }, getMoreUntilDone);
 					} else {
 					   	console.log('all done', allRecords); //comment from the line 'if (response.hits.total > allRecords.length) {' to this line if you are using kibana in mod development.
@@ -547,7 +549,9 @@ define(function (require){
 					if(how_many_visualization_checked != response.hits.total){
 						client.scroll({
 							scroll: '10s',
-							body: response._scroll_id
+							body: {
+								"scroll_id":[response._scroll_id]
+							}
 					    }, getMoreVisualization);	
 					} //comment from line 'if(how_many_visualization_checked != response.hits.total){' to this line if you're using Kibana 6.0.0 ; then add \"size\":a_number_equal_to_the_vis_saved, before \"query\" to the this.queryKibana variable.
 				}
