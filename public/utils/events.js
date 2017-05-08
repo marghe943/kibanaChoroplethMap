@@ -76,8 +76,10 @@ define(function (require){
 		
 		function MouseOverEvent(scope,feature,leafletEvent){
 			var layer = leafletEvent.target;
-      var queryResult = {};
+      			var queryResult = {};
 			var norm = (scope.vis.params.normalized == "yes")?"norm":"notNorm";
+			 if((scope.vis.params.geoShapeField.length == 0) || (scope.vis.params.geoPointField == 0))
+       				 return;
 
       layer.setStyle({
 				weight: 1,
@@ -96,6 +98,8 @@ define(function (require){
 		function MouseOutEvent(scope,leafletPayload){
 			scope.selected = '';
 			scope.how_many = '';
+			 if((scope.vis.params.geoShapeField.length == 0) || (scope.vis.params.geoPointField == 0))
+        			return;
 			
 			if(leafletPayload.leafletEvent != undefined){
 
@@ -115,28 +119,6 @@ define(function (require){
 
 			}
 		};
-
-    function AddLayerEvent(scope,leafletPayload){
-
-      if(leafletPayload.leafletEvent != undefined){
-
-        var layer = leafletPayload.leafletEvent.layer;
-        var feature = leafletPayload.leafletEvent.layer.feature;
-        if(feature != undefined){
-          var norm = (scope.vis.params.normalized == "yes")?"norm":"notNorm";
-          var queryResult = {};
-
-          queryResult = scope.map.getQueryResult(scope.layerChosen,norm,scope.how_show_data);
-
-          layer.setStyle({
-            weight: 1,
-            color:'#969696',
-            fillOpacity:1,
-            fillColor: getColor(queryResult[feature.properties.NAME],scope.vis.params.normalized,scope.how_show_data,scope.map.getIntervals(scope.layerChosen,norm,scope.how_show_data),scope.colorLegend[norm][scope.how_show_data]) //
-          });
-        }
-      }
-    };
 
 		function changeStyle(scope,leafletData){
       leafletData.getMap(scope.mapIDLayer[scope.vis.params.layer]).then(function (map) {
