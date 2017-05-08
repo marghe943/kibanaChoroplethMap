@@ -18,7 +18,7 @@
 
 */-->
 <div class="controller" ng-controller="ChorMapController" style="height:100%;width:100%;position: absolute;">
-	<div id="container" ng-if="!errorField" class="container" style="height:100%; width:100%;">
+	<div id="container" ng-show="!errorField" class="container" style="height:100%; width:100%;">
 		<div class="leafletContainer" style="height:100%; width:100%;" ng-show="(vis.params.layer == 'countries') && doneQuery" ng-if="(where_are_we == 'visualization') || ((where_are_we == 'dashboard')&&(vis.params.layer == 'countries'))">
             <leaflet id="{{mapID}}_countries" maxbounds="maxbounds" legend="legend_countries" lf-center="center" defaults="defaults" geojson="geojson_countries" events="events"></leaflet>
         </div>
