@@ -10,7 +10,7 @@
   	"leaflet":"0.7.7",
   	"angular":"1.6.3",
     "angular-leaflet-directive":"0.10.0",
-    "elasticsearch":"git://github.com/elastic/elasticsearch-js/releases/tag/v13.0.0-rc2",
+    "elasticsearch":"git://github.com/elastic/bower-elasticsearch-js",
     "jquery":"3.2.1"
    }
 }
