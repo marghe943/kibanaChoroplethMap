@@ -28,7 +28,8 @@ function CrisisMapProvider(Private) {
 		description: 'Choropleth Map Visualization. It only works if you have at least one geo_point field '+
 					'and the relative geo_shape field of type point in your index (see read.md). '+
 					'When you choose the index to visualize you have to wait about 30s - 60s before '+
-					'you see the visualization panel, for some geojson shapes need to be uploaded.', // The description of this vis
+					'you see the visualization panel, for some geojson shapes need to be uploaded. '+
+					'Don\'t freak out if everything seems not to respond!', // The description of this vis
 		icon: 'fa-map', // The font awesome icon of this visualization
 		template: require('plugins/choropleth_map/chorMap.html'), // The template, that will be rendered for this visualization
 		// Define the aggregation your visualization accepts
