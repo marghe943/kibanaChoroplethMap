@@ -157,7 +157,6 @@ define(function (require){
 		return {
 			MouseOverEvent:MouseOverEvent,
 			MouseOutEvent:MouseOutEvent,
-      AddLayerEvent:AddLayerEvent,
 			changeStyle:changeStyle,
       ClickEvent:ClickEvent
 		}
