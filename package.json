@@ -1,6 +1,6 @@
 {
   "name": "choropleth_map",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "choropleth map",
   "main": "index.js",
   "kibana": {
