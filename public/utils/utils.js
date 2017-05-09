@@ -145,6 +145,8 @@ define(function (require){
       //console.log("prev_value_lin: "+ util['prev_value_lin']);
 
       //LOG LEGEND
+      if((util['max_log'] == 0) && (util['min_log'] == 0))
+        util['max_log'] = 1; //otherwise the  util['totRangeLog'] would be 0.
 
       util['totRangeLog'] = Math.abs(Math.ceil(util['max_log']*10)/10 - Math.floor(util['min_log']*10)/10);
       var pow = Math.ceil(Math.abs(Math.log10(util['totRangeLog']/9)));
