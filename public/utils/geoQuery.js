@@ -70,7 +70,7 @@ define(function (require){
 
 		function QueryJSON(scope){
 
-			this.queryKibana = '{\"index\":\".kibana\",\"type\":\"visualization\",\"body\":{\"query\":{\"match_all\":{}}}}';
+			this.queryKibana = '{\"index\":\".kibana\",\"type\":\"visualization\",\"scroll\":\"10s\",\"body\":{\"query\":{\"match_all\":{}}}}';
 			this.queryJsonIndexChosen = '{\"index\":\"' + scope.vis.indexPattern.id + '\",\"body\":{}}';
 			this.queryJsonWorld = '{\"index\":\"'+scope.vis.params.index_chosen+'\",\"type\":\"' + scope.layerChosen + '\",\"scroll\":\"10s\",\"body\":{}}';
 			this.queryGeoShape = '{\"index\":\"' + scope.vis.indexPattern.id + '\",\"body\":{\"size\":0,\"query\":{\"bool\":{\"must\":[]}},\"aggs\":{\"filter_agg\":{\"filters\":{\"filters\":{}}}}}}';
@@ -291,6 +291,14 @@ define(function (require){
 			var index_pos = 0;
 			var results = [];
 			var took = 0;
+
+			/*if you have two maps in a dashboard, for example one with 'countries' layer and the other one with 'italy_municipalities' layer,
+			and you filter on a country different from Italy, the queryFilterAreaWorld's result will be 0. hits_ids.length == 0.*/
+			if(hits_ids.length == 0){ 
+				console.log("hits_ids.length: 0");
+				applyGeoJson(scope,jsonData,leafletData,results,hits_ids);
+				return;
+			}
 
 			for(var i = 0; i<hits_ids.length && i<900;i++){
 				if(i != (hits_ids.length -1) && i!=899)
