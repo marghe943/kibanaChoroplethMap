@@ -34,7 +34,7 @@ define(function (require){
       var firstObject = true;
       var check_log;
       var norm = (normValuesFlag == true)? "norm" : "notNorm";
-      //console.log("normValuesFlag: "+normValuesFlag);
+      console.log("normValuesFlag: "+normValuesFlag);
 
       for(var key in features){
         var pop = (features[key].properties.population != undefined)? features[key].properties.population : null;
@@ -95,10 +95,10 @@ define(function (require){
       scope.map.setQueryResult(scope.layerChosen,norm,'customizable',values_linear);
       scope.map.setQueryResult(scope.layerChosen,norm,'logarithmic',values_log);
 
-      /*console.log("Max lin: "+max_lin);
+      console.log("Max lin: "+max_lin);
       console.log("min_lin: "+min_lin);
       console.log("Max log: "+max_log);
-      console.log("min_log: "+min_log);*/
+      console.log("min_log: "+min_log);
 
       scope.map.setMaxValue(scope.layerChosen,norm,'linear',max_lin.toExponential(3));
       scope.map.setMaxValue(scope.layerChosen,norm,'logarithmic',max_log);
@@ -115,6 +115,9 @@ define(function (require){
       //MODIFY MAX AND MIN FOR LINEAR LEGEND
       var pattern_number = /[0-9 .]+(?=e[-+]*[0-9]+)/g;
       var pattern_exp = /e[-+]*[0-9]+/g;
+
+      console.log("util['max_lin']: "+util['max_lin']);
+      console.log("util['min_lin']: "+util['min_lin']);
 
       util['max_lin_exp'] = pattern_exp.exec(util['max_lin'].toString())[0];
       util['max_lin'] = Number(pattern_number.exec(util['max_lin'].toString())[0]);
@@ -145,6 +148,10 @@ define(function (require){
       //console.log("prev_value_lin: "+ util['prev_value_lin']);
 
       //LOG LEGEND
+
+      console.log("util['max_log']: "+util['max_log']);
+      console.log("util['min_log']: "+util['min_log']);
+
       if((util['max_log'] == 0) && (util['min_log'] == 0))
         util['max_log'] = 1; //otherwise the  util['totRangeLog'] would be 0.
 

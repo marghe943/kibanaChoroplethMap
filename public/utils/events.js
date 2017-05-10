@@ -143,13 +143,14 @@ define(function (require){
       });
 		};
 
-    function ClickEvent(scope,leafletPayload,query,client,queryFilter,filters_from_saved_vis){
+    function ClickEvent(scope,leafletPayload,query,client,queryFilter,filters_from_saved_vis,filters_tot){
 
       if(leafletPayload.leafletEvent != undefined){
         scope.shapeClicked = leafletPayload.leafletObject.feature.properties.NAME;
         console.log("shapeClicked: "+scope.shapeClicked);
 
-        query.queryClickEvent(scope,client,queryFilter,filters_from_saved_vis);
+        var filters = filters_tot.concat(filters_from_saved_vis);
+        query.queryClickEvent(scope,client,queryFilter,filters);
 
       }
     };

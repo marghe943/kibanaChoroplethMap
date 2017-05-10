@@ -563,14 +563,14 @@ define(function (require){
 			}
 		}
 
-		function queryClickEvent(scope,client,queryFilter,filters_from_saved_vis){
+		function queryClickEvent(scope,client,queryFilter,filters){
 			var queryJson = new QueryJSON(scope);
 			var coordinates = {};
 			new_query = JSON.parse(queryJson.queryClickShape);
 
-			if(filters_from_saved_vis.length != 0){
+			if(filters.length != 0){
 				console.log("NEED FILTERS QUERY CLICKED EVENT.");
-				addFilters(new_query,filters_from_saved_vis);
+				addFilters(new_query,filters);
 
 			}
 
