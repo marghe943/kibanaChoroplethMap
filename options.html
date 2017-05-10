@@ -1,0 +1,120 @@
+<!-- /* A KIBANA PLUGIN FOR CHOROPLETH MAPS
+    Copyright (C) 2017  Margherita Gambini
+
+   This file is part of choropleth_map.
+
+    choropleth_map is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    choropleth_map is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with choropleth_map.  If not, see <http://www.gnu.org/licenses/>.
+
+*/-->
+<p class="options">Index which will be used to make the geo_shape query:</p>
+<select class="form-control"
+        ng-model="vis.params.index_chosen"
+        ng-init="vis.params.index_chosen"
+        required
+        ng-options="index_chosen as index_chosen for index_chosen in vis.type.params.indexes_available">
+</select>
+<p class="options">Show normalized data:</p>
+<select class="form-control"
+        ng-model="vis.params.normalized"
+        ng-init="vis.params.normalized || vis.type.params.normalizedFields[0]"
+        ng-options="normalized as normalized for normalized in vis.type.params.normalizedFields">
+</select>
+<p class="options">How to normalize data:</p>
+<select class="form-control"
+        ng-model="vis.params.how_show_data"
+        ng-init="vis.params.how_show_data || vis.type.params.how_show_data[0]"
+        ng-options="how_show_data as how_show_data for how_show_data in vis.type.params.how_show_data">
+</select>
+<div ng-show="vis.params.how_show_data == 'customizable'" ng-hide="vis.params.how_show_data != 'customizable'">
+  <p class="options">Choose data range [from - to): </p>
+  <table class="tables" ng-show="vis.params.ranges.length">
+    <tr>
+      <th>
+        <label>From</label>
+      </th>
+      <th colspan="2">
+        <label>To</label>
+      </th>
+    </tr>
+
+    <tr
+      ng-repeat="range in vis.params.ranges track by $index">
+      <td>
+        <input
+          ng-model="range.from"
+          type="number"
+          class="form-control"
+          name="range.from"
+          step="any" />
+      </td>
+      <td>
+        <input
+          ng-model="range.to"
+          type="number"
+          class="form-control"
+          name="range.to"
+          step="any" />
+      </td>
+      <td>
+        <input
+          ng-model="range.color"
+          type="color"
+          class="rangeColor"
+          name="range.color"/>
+      </td>
+      <td>
+        <button
+          type="button"
+          ng-click="vis.params.ranges.splice($index, 1)"
+          class="btn btn-danger btn-xs">
+          <i class="fa fa-times"></i>
+        </button>
+      </td>
+    </tr>
+  </table>
+
+  <div class="hintbox" ng-show="vis.params.ranges.length == 0">
+  <p>
+    <i class="fa fa-danger text-danger"></i>
+    <strong>Required:</strong> You must specify at least one range.
+  </p>
+  </div>
+
+  <div
+    ng-click="vis.params.ranges.push({})"
+    class="sidebar-item-button primary">
+    Add Range
+  </div>
+</div>
+<p class="options">Choose a layer to show: </p>
+<select class="form-control"
+        required
+        ng-init="vis.params.layer"
+        ng-model="vis.params.layer"
+        ng-options="layer as layer for layer in vis.type.params.layers">
+</select>
+<p class="options">Choose a geo_shape field: </p>
+<select class="form-control"
+        required
+        ng-init="vis.params.geoShapeField"
+    		ng-model="vis.params.geoShapeField"
+    		ng-options="geoShapeField as geoShapeField for geoShapeField in vis.type.params.geoShapeFields">
+</select>
+<p class="options">Choose a geo_point field: </p>
+<select class="form-control"
+        required
+        ng-init="vis.params.geoPointField"
+    		ng-model="vis.params.geoPointField"
+    		ng-options="geoPointField as geoPointField for geoPointField in vis.type.params.geoPointFields">
+</select>

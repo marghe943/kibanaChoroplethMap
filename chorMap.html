@@ -1,0 +1,45 @@
+<!-- /*	A KIBANA PLUGIN FOR CHOROPLETH MAPS
+    Copyright (C) 2017  Margherita Gambini
+
+   This file is part of choropleth_map.
+
+    choropleth_map is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    choropleth_map is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with choropleth_map.  If not, see <http://www.gnu.org/licenses/>.
+
+*/-->
+<div class="controller" ng-controller="ChorMapController" style="height:100%;width:100%;position: absolute;">
+	<div id="container" ng-show="!errorField" class="container" style="height:100%; width:100%;">
+		<div class="leafletContainer" style="height:100%; width:100%;" ng-show="(vis.params.layer == 'countries') && doneQuery" ng-if="(where_are_we == 'visualization') || ((where_are_we == 'dashboard')&&(vis.params.layer == 'countries'))">
+            <leaflet id="{{mapID}}_countries" maxbounds="maxbounds" legend="legend_countries" lf-center="center" defaults="defaults" geojson="geojson_countries" events="events"></leaflet>
+        </div>
+        <div class="leafletContainer" style="height:100%; width:100%;" ng-show="(vis.params.layer == 'regions') && doneQuery" ng-if="(where_are_we == 'visualization') || ((where_are_we == 'dashboard')&&(vis.params.layer == 'regions'))">
+            <leaflet id="{{mapID}}_regions" maxbounds="maxbounds" legend="legend_regions" lf-center="center" defaults="defaults" geojson="geojson_regions" events="events"></leaflet>
+        </div>
+        <div class="leafletContainer" style="height:100%; width:100%;" ng-show="(vis.params.layer == 'italy_provinces') && doneQuery" ng-if="(where_are_we == 'visualization') || ((where_are_we == 'dashboard')&&(vis.params.layer == 'italy_provinces'))">
+            <leaflet id="{{mapID}}_italy_provinces" maxbounds="maxbounds" legend="legend_italy_provinces" lf-center="center" defaults="defaults" geojson="geojson_italy_provinces" events="events"></leaflet>
+        </div>
+        <div class="leafletContainer" style="height:100%; width:100%;" ng-show="(vis.params.layer == 'italy_municipalities') && doneQuery" ng-if="(where_are_we == 'visualization') || ((where_are_we == 'dashboard')&&(vis.params.layer == 'italy_municipalities'))">
+            <leaflet id="{{mapID}}_italy_municipalities" maxbounds="maxbounds" legend="legend_italy_municipalities" lf-center="center" defaults="defaults" geojson="geojson_italy_municipalities" events="events"></leaflet>
+        </div>
+		<div class="info">{{selected}} : {{how_many}}</div>
+		<div id ="{{mapID}}_{{vis.params.layer}}Resize" class="resize">
+			<iframe></iframe><iframe></iframe>
+		</div>
+	</div>
+	<div ng-if="errorField">
+		<p class="attention" id="errorPar">Error in index "{{indexChosen}}" : {{textError}} </p>
+	</div>
+    <div ng-if="(!doneQuery && !errorField)">
+        <p class="attention" id="waitQuery">WAIT FOR THE QUERY TO BE COMPLETED . . .</p>
+    </div>
+</div>
