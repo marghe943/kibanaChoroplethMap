@@ -191,7 +191,7 @@ define(function(require){
                 });
 
             $scope.$on("leafletDirectiveGeoJson."+$scope.mapIDLayer[key]+".click", function(ev, leafletPayload) {
-                   events.ClickEvent($scope, leafletPayload, query, client,queryFilter,filters_from_saved_vis);
+                   events.ClickEvent($scope, leafletPayload, query, client,queryFilter,filters_from_saved_vis,filters_tot);
                 });
 
         }
