@@ -104,15 +104,6 @@ Pay attention to how the coordinates are written: the geo_shape field always wan
 
 If your index data come only with the geo_point field then you have to build a script and add the geo_shape field.
 
-Inside this repo I will include an index and the associated script as example. The data that you find inside this folder already have the two requested fields, so don't use the script on them. That script can help you to add the geo_shape Point field to others index you will download.
-To load that index on Elasticsearch (MAKE SURE YOU HAVE 'ELASTICDUMP' INSTALLED):
-
-1. start your elasticsearch: ```$ path_to_elasticsearch_folder/bin/elasticsearch```
-2. ```$ cd path_to_kibana_folder/plugins```
-3. ```$ cd kibanaChoroplethMap/index_example```
-4. ```elasticdump --input=index_schema.json --output=http://localhost:9200/<index_name> --type=mapping```
-5. ```elasticdump --input=index_data.json --output=http://localhost:9200/<index_name> --type=data```
-
 #### Let's begin
 
 - ChoroplethMap Visualization
@@ -135,7 +126,7 @@ Otherwise this screen is shown:
 
 ![indexShape](./imgs_read/indexShape.png)
 
-- Choose if you want normalized data or not.
+- Choose if you want normalized data or not. Only the countries, italy's regions, italy's provinces and italy's municipalities can be normalized!  
 
 ![normalized](./imgs_read/normalized.png)
 
