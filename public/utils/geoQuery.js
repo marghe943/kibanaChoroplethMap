@@ -43,27 +43,28 @@ define(function (require){
               	if(d == '-') //can't be normalized
                 	return "white";
 
-            	return ((d > intervals[7 + plus_one]) && d <= intervals[8 + plus_one])? '#084081' :
-                    d > intervals[6 + plus_one]? '#0868ac' :
-                    d > intervals[5 + plus_one]? '#2b8cbe' :
-                    d > intervals[4 + plus_one]? '#4eb3d3' :
-                    d > intervals[3 + plus_one]? '#7bccc4' :
-                    d > intervals[2 + plus_one]? '#a8ddb5' :
-                    d > intervals[1 + plus_one]? '#ccebc5' :
-                    d > intervals[0 + plus_one]? '#e0f3db' :
+            	return ((d > intervals[8]) && d <= intervals[9])? '#084081' :
+                    d > intervals[7]? '#0868ac' :
+                    d > intervals[6]? '#2b8cbe' :
+                    d > intervals[5]? '#4eb3d3' :
+                    d > intervals[4]? '#7bccc4' :
+                    d > intervals[3]? '#a8ddb5' :
+                    d > intervals[2]? '#ccebc5' :
+                    d > intervals[1]? '#e0f3db' :
                                   '#f7fcf0';              
             }
 
+
             //NO NORMALIZED DATA
 
-            return ((d > intervals[7 + plus_one]) && d <= intervals[8 + plus_one])? '#800026' :
-                    d > intervals[6 + plus_one]? '#BD0026' :
-                    d > intervals[5 + plus_one]? '#E31A1C' :
-                    d > intervals[4 + plus_one]? '#FC4E2A' :
-                    d > intervals[3 + plus_one]? '#FD8D3C' :
-                    d > intervals[2 + plus_one]? '#FEB24C' :
-                    d > intervals[1 + plus_one]? '#FED976' :
-                    d > intervals[0 + plus_one]? '#FFEDA0' :
+            return ((d > intervals[8]) && d <= intervals[9])? '#800026' :
+                    d > intervals[7]? '#BD0026' :
+                    d > intervals[6]? '#E31A1C' :
+                    d > intervals[5]? '#FC4E2A' :
+                    d > intervals[4]? '#FD8D3C' :
+                    d > intervals[3]? '#FEB24C' :
+                    d > intervals[2]? '#FED976' :
+                    d > intervals[1]? '#FFEDA0' :
                                   '#FFFFCC';
         }; 
 
