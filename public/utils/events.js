@@ -23,7 +23,6 @@ define(function (require){
 	return function EventFunctionsFactory(Private){
 
 		function getColor(d,normalized,how_show_data,intervals,colorLegendCustomizable) {
-            var plus_one = (how_show_data == "linear")? 0 : 1; //for data shown in the logarithmic way the intervals array has length 9 instead of 8.
 
             if(how_show_data == "customizable"){
                 var index_color = colorLegendCustomizable.length -1;
