@@ -14,9 +14,6 @@ define(function (require){
 		const utils = Private(require('plugins/choropleth_map/utils/utils.js'));
 
 		function getColor(d,normalized,how_show_data) {
-
-			
-			var plus_one = (how_show_data == "linear")? 0 : 1; //for data shown in the logarithmic way the intervals array has length 9 instead of 8.
             
 			if(how_show_data == "customizable"){
 
