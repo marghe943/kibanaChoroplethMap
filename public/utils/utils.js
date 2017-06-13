@@ -199,11 +199,12 @@ define(function (require){
       for(var i = 0 ; i < 9; i++){
         val_lin = Math.round((util['value_lin_interval']+util['prev_value_lin']) * 1e12) / 1e12;
         val_log = Math.round((util['value_log_interval']+util['prev_value_log']) * 1e12) / 1e12;
-
-        intervals_linear.push(val_lin.toExponential());
         
         if(i == 0){
 
+	  intervals_linear.push(util['prev_value_lin']);
+          intervals_linear.push(val_lin.toExponential());	
+		
           intervals_log.push(Math.floor(util['min_log']*10)/10);
           intervals_log.push(val_log);
 
@@ -212,6 +213,7 @@ define(function (require){
         }
         else{
           
+	  intervals_linear.push(val_lin.toExponential());
           intervals_log.push(val_log);
 
           scope.intervalsLegend[norm][scope.layerChosen]['logarithmic'].push('('+ util['prev_value_log'] + ' - ' + val_log + ']');
