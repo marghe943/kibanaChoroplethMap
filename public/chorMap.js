@@ -18,7 +18,7 @@
 
 */
 
-function CrisisMapProvider(Private) {
+function ChorMapProvider(Private) {
 	var TemplateVisType = Private(require('ui/template_vis_type/template_vis_type'));
 
 	// Describe our visualization
@@ -55,7 +55,7 @@ function CrisisMapProvider(Private) {
 	});
 }
 
-require('ui/registry/vis_types').register(CrisisMapProvider);
+require('ui/registry/vis_types').register(ChorMapProvider);
 require('plugins/choropleth_map/chorMapController');
 require('plugins/choropleth_map/chorMap.less');
 
