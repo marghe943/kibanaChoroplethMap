@@ -71,11 +71,11 @@ define(function (require){
 			this.queryKibana = '{\"index\":\".kibana\",\"type\":\"visualization\",\"scroll\":\"10s\",\"body\":{\"query\":{\"match_all\":{}}}}';
 			this.queryJsonIndexChosen = '{\"index\":\"' + scope.vis.indexPattern.id + '\",\"body\":{}}';
 			this.queryJsonWorld = '{\"index\":\"'+scope.vis.params.index_chosen+'\",\"type\":\"' + scope.layerChosen + '\",\"scroll\":\"10s\",\"body\":{}}';
-			this.queryGeoShape = '{\"index\":\"' + scope.vis.indexPattern.id + '\",\"body\":{\"size\":0,\"query\":{\"bool\":{\"must\":[]}},\"aggs\":{\"filter_agg\":{\"filters\":{\"filters\":{}}}}}}';
 			this.queryGeoBound = '\"size\": 0,'+ 
 						  '\"query\": {'+ 
 						    '\"bool\": {'+ 
 						     '\"must\":[],'+
+							'\"must_not\":[],'+
 						      '\"filter\": {'+ 
 						        '\"geo_bounding_box\": {'+ 
 						          '\"'+scope.vis.params.geoPointField+'\": {'+ 
@@ -129,6 +129,7 @@ define(function (require){
 											'\"query\":{'+
 												'\"bool\": {'+
 												'\"must\":[],'+
+												'\"must_not\":[],'+
 											      '\"filter\": {'+
 											        '\"geo_shape\": {'+
 											          '\"'+scope.vis.params.geoShapeField+'\": {'+
@@ -171,12 +172,14 @@ define(function (require){
 		    }
 		};
 
-		function createStringGeoShape(id,scope,filters){
+		function createStringGeoShape(id,scope,filters_to_apply){
 
 			var str_index = '{\"index\":\"'+scope.vis.indexPattern.id+'\"},';
-			var str_query = '{\"query\":{\"bool\":{\"must\":[],\"filter\":{\"geo_shape\": {\"'+scope.vis.params.geoShapeField+'\": {\"indexed_shape\": {\"id\": \"'+id+'\",\"type\": \"'+scope.layerChosen+'\",\"index\": \"'+scope.vis.params.index_chosen+'\",\"path\":\"shape_coordinates\"}}}}}}}';
+			var str_query = '{\"query\":{\"bool\":{\"must\":[],\"must_not\":[],\"filter\":{\"geo_shape\": {\"'+scope.vis.params.geoShapeField+'\": {\"indexed_shape\": {\"id\": \"'+id+'\",\"type\": \"'+scope.layerChosen+'\",\"index\": \"'+scope.vis.params.index_chosen+'\",\"path\":\"shape_coordinates\"}}}}}}}';
 			var obj_query = JSON.parse(str_query);
-			obj_query.query.bool.must = filters;
+			
+			obj_query.query.bool.must = filters_to_apply["positive"];
+			obj_query.query.bool.must_not = filters_to_apply["negative"];
 			str_query = JSON.stringify(obj_query);
 
 			return str_index+str_query;
@@ -193,25 +196,35 @@ define(function (require){
 	        	return null;
 		};
 
-		function obtainFiltersShapeQuery(filters){ //filters is an array of objects
+		function obtainFiltersShapeQuery(filters_to_apply,filters){ //filters is an array of objects
 			console.log(filters);
-			var filters_to_return = [];
 			for(var i in filters){
 				for(var key in filters[i]){
 					if(key != "$$hashKey" && (key != "$state") && (key != "meta") && (key != "_proto_")){
-						console.log(filters[i][key]);
-						if(key == "query")
-							filters_to_return.push(filters[i][key]);
-						else{
+
+						if(key == "query_string"){
 							var new_obj = {};
 							new_obj[key] = filters[i][key];
-							filters_to_return.push(new_obj);
+							filters_to_apply["positive"].push(new_obj);
+						}
+						else if(key == "query" && filters[i]["meta"]["disabled"] == false){
+							if(filters[i]["meta"]["negate"]) //true
+								filters_to_apply["negative"].push(filters[i][key]);
+							else
+								filters_to_apply["positive"].push(filters[i][key]);
+						}
+						else if(key != "query" && filters[i]["meta"]["disabled"] == false){
+							var new_obj = {};
+							new_obj[key] = filters[i][key];
+							if(filters[i]["meta"]["negate"]) //true
+								filters_to_apply["negative"].push(new_obj);
+							else
+								filters_to_apply["positive"].push(new_obj);
 
 						}
 					}
 				}
 			}
-			return filters_to_return;
 		};
 
 		function applyGeoJson(scope,jsonData,leafletData,response,hits_ids){
@@ -284,7 +297,10 @@ define(function (require){
 
 		function queryHits(scope,client,jsonData,queryJson,hits_ids,leafletData,needFilters,filters){
 			var string_to_insert='';
-			var filters_to_apply = obtainFiltersShapeQuery(filters);
+			var filters_to_apply = {
+				"positive":[],
+				"negative":[]
+			}
 			var how_many_query_done = 0;
 			var index_pos = 0;
 			var results = [];
@@ -297,6 +313,8 @@ define(function (require){
 				applyGeoJson(scope,jsonData,leafletData,results,hits_ids);
 				return;
 			}
+			
+			obtainFiltersShapeQuery(filters_to_apply,filters);
 
 			for(var i = 0; i<hits_ids.length && i<900;i++){
 				if(i != (hits_ids.length -1) && i!=899)
@@ -442,18 +460,32 @@ define(function (require){
 		};
 
 		function addFilters(objQuery,filters){ //filters is an array of objects
+			console.log("ADDFILTERS");
 			console.log(filters);
 			for(var i in filters){
 				for(var key in filters[i]){
 					if(key != "$$hashKey" && (key != "$state") && (key != "meta") && (key != "_proto_")){
-						console.log(filters[i][key]);
-						if(key == "query")
-							objQuery.body.query.bool.must.push(filters[i][key]);
-						else{
+						
+						if(key == "query_string"){
 							var new_obj = {};
 							new_obj[key] = filters[i][key];
 							objQuery.body.query.bool.must.push(new_obj);
-
+						}
+						else if(key == "query" && filters[i]["meta"]["disabled"] == false){
+							if(filters[i]["meta"]["negate"])
+								objQuery.body.query.bool.must_not.push(filters[i][key]);
+							else
+								objQuery.body.query.bool.must.push(filters[i][key]);
+							
+						}
+						else if(key != "query" && filters[i]["meta"]["disabled"] == false){
+							var new_obj = {};
+							new_obj[key] = filters[i][key];
+							if(filters[i]["meta"]["negate"])
+								objQuery.body.query.bool.must_not.push(new_obj);
+							else
+								objQuery.body.query.bool.must.push(new_obj);
+							
 						}
 					}
 				}
@@ -477,6 +509,7 @@ define(function (require){
 
 			new_query = JSON.parse(new_query_json);
 			new_query.body.query.bool.must = []; //clear filters.
+			new_query.body.query.bool.must_not = []; //clear filters.
 
 			if(needFilters){
 				console.log("NEED FILTERS MAKE QUERY.");
