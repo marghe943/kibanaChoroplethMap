@@ -563,10 +563,13 @@ define(function (require){
 						searchSourceJSON = hits_array[key]._source.kibanaSavedObjectMeta.searchSourceJSON;
 						objVisState = JSON.parse(visState);
 				
-						if(objVisState.title == scope.$parent.vis.title){
-							console.log(hits_array[key]._source.kibanaSavedObjectMeta.searchSourceJSON);
-							
+						if(objVisState.title == scope.$parent.vis.title){							
 							objSearchSourceJSON = JSON.parse(searchSourceJSON);
+							
+							//for query_string
+							filters_tot.push(objSearchSourceJSON.query);
+							filters_from_saved_vis.push(objSearchSourceJSON.query);
+							
 							if(objSearchSourceJSON.filter.length != 0){
 								for(var key in objSearchSourceJSON.filter){
 					                filters_bar.push(objSearchSourceJSON.filter[key]);
