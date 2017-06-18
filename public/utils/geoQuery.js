@@ -68,7 +68,7 @@ define(function (require){
 
 		function QueryJSON(scope){
 
-			this.queryKibana = '{\"index\":\".kibana\",\"type\":\"visualization\",\"scroll\":\"10s\",\"body\":{\"query\":{\"match_all\":{}}}}';
+			this.queryKibana = '{\"index\":\".kibana\",\"type\":\"visualization\",\"body\":{\"query\":{\"match\":{\"title\":\"'+scope.$parent.vis.title+'\"}}}}';
 			this.queryJsonIndexChosen = '{\"index\":\"' + scope.vis.indexPattern.id + '\",\"body\":{}}';
 			this.queryJsonWorld = '{\"index\":\"'+scope.vis.params.index_chosen+'\",\"type\":\"' + scope.layerChosen + '\",\"scroll\":\"10s\",\"body\":{}}';
 			this.queryGeoBound = '\"size\": 0,'+ 
@@ -545,7 +545,6 @@ define(function (require){
 		function queryKibanaIndex(scope,client,filters_bar,filters_tot,filters_from_saved_vis){
 			var queryJson = new QueryJSON(scope);
 			new_query = JSON.parse(queryJson.queryKibana);
-			var how_many_visualization_checked = 0;
 
 			client.search(new_query,function getMoreVisualization(error,response){
 				if(error){
@@ -554,44 +553,30 @@ define(function (require){
                 	scope.textError = "Error in executing QUERY ON KIBANA INDEX. \n" + error;
             		return;
 				}else{
-					console.log("response kibana");
-					var hits_array = response.hits.hits;
+					var hit = response.hits.hits[0];
 					var objVisState,visState;
-					for(var key in hits_array){
-
-						visState = hits_array[key]._source.visState;
-						searchSourceJSON = hits_array[key]._source.kibanaSavedObjectMeta.searchSourceJSON;
-						objVisState = JSON.parse(visState);
 				
-						if(objVisState.title == scope.$parent.vis.title){							
-							objSearchSourceJSON = JSON.parse(searchSourceJSON);
+					visState = hit._source.visState;
+					searchSourceJSON = hit._source.kibanaSavedObjectMeta.searchSourceJSON;
+					objVisState = JSON.parse(visState);
+				
+					//console.log(hit._source.kibanaSavedObjectMeta.searchSourceJSON);
 							
-							//for query_string
-							filters_tot.push(objSearchSourceJSON.query);
-							filters_from_saved_vis.push(objSearchSourceJSON.query);
-							
-							if(objSearchSourceJSON.filter.length != 0){
-								for(var key in objSearchSourceJSON.filter){
-					                filters_bar.push(objSearchSourceJSON.filter[key]);
-					                filters_tot.push(objSearchSourceJSON.filter[key]);
-					                filters_from_saved_vis.push(objSearchSourceJSON.filter[key]);
-					            }
-							}
+					objSearchSourceJSON = JSON.parse(searchSourceJSON);
 
-							scope.vis.params.geoShapeField = objVisState.params.geoShapeField;
-							scope.vis.params.geoPointField = objVisState.params.geoPointField;
-							
-							return;
-						}
-					}
+					//for query_string
+					filters_tot.push(objSearchSourceJSON.query);
+					filters_from_saved_vis.push(objSearchSourceJSON.query);
 
-					how_many_visualization_checked += hits_array.length;
-					if(how_many_visualization_checked != response.hits.total){
-						client.scroll({
-							scrollId:response._scroll_id,
-							scroll: '30s'
-					    }, getMoreVisualization);	
-					} //comment from line 'if(how_many_visualization_checked != response.hits.total){' to this line if you're using Kibana 6.0.0 ; then add \"size\":a_number_equal_to_the_vis_saved, before \"query\" to the this.queryKibana variable.
+					if(objSearchSourceJSON.filter.length != 0)
+						for(var key in objSearchSourceJSON.filter){
+					        filters_bar.push(objSearchSourceJSON.filter[key]);
+					        filters_tot.push(objSearchSourceJSON.filter[key]);
+					        filters_from_saved_vis.push(objSearchSourceJSON.filter[key]);
+					    }
+				
+					scope.vis.params.geoShapeField = objVisState.params.geoShapeField;
+					scope.vis.params.geoPointField = objVisState.params.geoPointField;
 				}
 			});
 		};
