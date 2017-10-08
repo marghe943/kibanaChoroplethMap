@@ -17,9 +17,16 @@
     along with choropleth_map.  If not, see <http://www.gnu.org/licenses/>.
 
 */
+import { TemplateVisTypeProvider } from 'ui/template_vis_type/template_vis_type';
+import { VisTypesRegistryProvider } from 'ui/registry/vis_types';
+import 'plugins/choropleth_map/chorMapController';
+import 'plugins/choropleth_map/chorMap.less';
+import ChorMapTemplate from 'plugins/choropleth_map/chorMap.html';
+import ChorMapEditor from 'plugins/choropleth_map/options.html';
 
-function ChorMapProvider(Private) {
-	var TemplateVisType = Private(require('ui/template_vis_type/template_vis_type'));
+
+VisTypesRegistryProvider.register(function ChorMapProvider(Private) {
+	const TemplateVisType = Private(TemplateVisTypeProvider);
 
 	// Describe our visualization
 	return new TemplateVisType({
@@ -31,7 +38,7 @@ function ChorMapProvider(Private) {
 					'you see the visualization panel, for some geojson shapes need to be uploaded. '+
 					'Don\'t freak out if everything seems not to respond!', // The description of this vis
 		icon: 'fa-map', // The font awesome icon of this visualization
-		template: require('plugins/choropleth_map/chorMap.html'), // The template, that will be rendered for this visualization
+		template: ChorMapTemplate, // The template, that will be rendered for this visualization
 		// Define the aggregation your visualization accepts
 		params:{
 			defaults:{
@@ -50,12 +57,8 @@ function ChorMapProvider(Private) {
 			geoPointFields:[],
 			normalizedFields:['yes','no'],
 			how_show_data:['linear','logarithmic','customizable'],
-			editor: require('plugins/choropleth_map/options.html')
+			editor: ChorMapEditor
 		}
 	});
-}
-
-require('ui/registry/vis_types').register(ChorMapProvider);
-require('plugins/choropleth_map/chorMapController');
-require('plugins/choropleth_map/chorMap.less');
+});
 

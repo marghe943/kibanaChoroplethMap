@@ -22,21 +22,20 @@
 
 import '../node_modules/leaflet/dist/leaflet.css';
 import '../node_modules/leaflet/dist/leaflet.js';
-import '../node_modules/angular/angular.min.js';
-import '../node_modules/elasticsearch-browser/elasticsearch.angular.min.js';
 import '../node_modules/angular-leaflet-directive/dist/angular-leaflet-directive.js';
 import '../node_modules/jquery/dist/jquery.min.js';
-import FilterBarQueryFilterProvider from 'ui/filter_bar/query_filter';
+import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import '../conf.js';
+import { uiModules } from 'ui/modules';
 
 define(function(require){
 
-	var module = require('ui/modules').get('kibana/choroplet_map', ['kibana','leaflet-directive','elasticsearch']);
+	var module = uiModules.get('kibana/choroplet_map', ['kibana','leaflet-directive','elasticsearch']);
 
 	module.service('client', function (esFactory) {
       return esFactory({
         host: 'http://'+window.host+':'+window.port,
-        requestTimeout:50000,
+        requestTimeout:120000,
         log:'trace'
       });
     });
@@ -201,6 +200,7 @@ define(function(require){
             var queryFilters = queryFilter.getFilters();
             filters_bar = []; //clear filter_bar
             filters_tot = []; //clear filter_tot
+
             
             for (var key in queryFilters)
                 filters_bar.push(queryFilters[key]);
@@ -211,11 +211,11 @@ define(function(require){
             for(var key in filters_from_saved_vis)
                 filters_tot.push(filters_from_saved_vis[key]);
 
-            if(JSON.stringify(filter_query_string) != "{}") //not empty
+            if(JSON.stringify(filter_query_string) != "{}" && JSON.stringify(filter_query_string) != "{\"match_all\":{}}") //not empty
                 filters_tot.push(filter_query_string);
 
-            console.log("FILTERS_TOT, QUERYFILTERS");
-            console.log(filters_tot);
+            //console.log("FILTERS_TOT, QUERYFILTERS");
+            //console.log(filters_tot);
 
             needFilters = (filters_tot.length != 0)? true:false;
             $scope.errorField = false;
@@ -235,13 +235,15 @@ define(function(require){
                 filter_query_string = {};
                 filters_tot = [];
 
+                //console.log("QUERYFILTERS UPDATE");
+
                 if($route.current.scope.model != undefined)
                     filter_query_string = $route.current.scope.model.query;
                 else
                     filter_query_string = $route.current.scope.state.query;
                 
-                console.log("filters_bar keyup");
-                console.log(filters_bar);
+                //console.log("filters_bar keyup");
+                //console.log(filters_bar);
 
                 for(var key in filters_bar)
                     filters_tot.push(filters_bar[key]);
@@ -249,10 +251,11 @@ define(function(require){
                 for(var key in filters_from_saved_vis)
                     filters_tot.push(filters_from_saved_vis[key]);
 
-                filters_tot.push(filter_query_string);
+                if(JSON.stringify(filter_query_string) != "{\"match_all\":{}}")
+                    filters_tot.push(filter_query_string);
 
-                console.log("KEYUP, FILTERS_TOT");
-                console.log(filters_tot);
+                //console.log("KEYUP, FILTERS_TOT");
+                //console.log(filters_tot);
 
                 needFilters = (filters_tot.length != 0)? true:false;
                 $scope.errorField = false;
@@ -485,12 +488,13 @@ define(function(require){
             //For some unknown reasons Kibana doesn't save the geopoint and geoshape fields inside $scope.vis.params.geoShapeField and $scope.vis.params.geoPointField
             //if the user had saved some filters, we have to apply them (filters_from_saved_vis)
             query.queryKibanaIndex($scope,client,filters_bar,filters_tot,filters_from_saved_vis); 
-              
+            console.log("FILTERS_FROM_SAVED_VIS");
+            console.log(filters_from_saved_vis);
         }    
 
         //FIND FILTERS TO APPLY.
 
-        console.log($route.current.scope);
+        //console.log($route.current.scope);
         var filtersBar = queryFilter.getFilters();
         filter_query_string = ($route.current.scope.state != undefined)?$route.current.scope.state.query:$route.current.scope.model.query;
 
@@ -502,12 +506,11 @@ define(function(require){
         for(var key in filters_from_saved_vis)
                 filters_tot.push(filters_from_saved_vis[key]);
 
-        if(JSON.stringify(filter_query_string) != "{}") //not empty
+        if(JSON.stringify(filter_query_string) != "{}" && JSON.stringify(filter_query_string) != "{\"match_all\":{}}") //not empty
             filters_tot.push(filter_query_string);
         
         needFilters = (filters_tot.length != 0)? true:false;
 
-        
         //WATCH OPTION FIELDS
 
         if(!$scope.errorField){
