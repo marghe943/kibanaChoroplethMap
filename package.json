@@ -4,7 +4,7 @@
   "description": "choropleth map",
   "main": "index.js",
   "kibana": {
-    "version": "5.3.2"
+    "version": "5.6.0"
   },
   "dependencies": {
   	"leaflet":"0.7.7",
