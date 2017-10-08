@@ -148,8 +148,10 @@ define(function (require){
         scope.shapeClicked = leafletPayload.leafletObject.feature.properties.NAME;
         console.log("shapeClicked: "+scope.shapeClicked);
 
-        var filters = filters_tot.concat(filters_from_saved_vis);
-        query.queryClickEvent(scope,client,queryFilter,filters);
+        var string_filter_new = '{\"meta\":{\"negate\":false,\"index\":\"'+scope.vis.indexPattern.title+'\"},\"query\":{\"bool\":{\"filter\":{\"geo_shape\": {\"'+scope.vis.params.geoShapeField+'\": {\"indexed_shape\": {\"id\": \"'+scope.shapeClicked+'\",\"type\": \"'+scope.layerChosen+'\",\"index\": \"'+scope.vis.params.index_chosen+'\",\"path\":\"shape_coordinates\"}}}}}}}';
+        var filter_new = JSON.parse(string_filter_new);
+
+        queryFilter.addFilters(filter_new);
 
       }
     };

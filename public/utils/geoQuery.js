@@ -7,10 +7,6 @@ define(function (require){
 		var intervals = [];
 		var colorLegendCustomizable = [];
 		var constScroll = 500; //8000 only if you are using kibana in mod development. Change it to a lesser number with other kibana versions.
-		var constFixCoordinates = 5; //if in the function queryClickEvent(...) the resulting geo_bounding_box has top_left_lat == bottom_right_lat and/or
-									// top_left_lon == bottom_right_lon then we have to fix the coordinates to create a real box. We do this by
-									// incrementing the longitude and/or decrementing the latitude of the point bottom_right. We use Math.pow(10,constFixCoordinates)
-									//and Math.ceil, Math.floor as explained in function below fixCoordinates(coordinates)
 		const utils = Private(require('plugins/choropleth_map/utils/utils.js'));
 
 		function getColor(d,normalized,how_show_data) {
@@ -69,7 +65,7 @@ define(function (require){
 		function QueryJSON(scope){
 
 			this.queryKibana = '{\"index\":\".kibana\",\"type\":\"visualization\",\"body\":{\"query\":{\"match\":{\"title\":\"'+scope.$parent.vis.title+'\"}}}}';
-			this.queryJsonIndexChosen = '{\"index\":\"' + scope.vis.indexPattern.id + '\",\"body\":{}}';
+			this.queryJsonIndexChosen = '{\"index\":\"' + scope.vis.indexPattern.title + '\",\"body\":{}}';
 			this.queryJsonWorld = '{\"index\":\"'+scope.vis.params.index_chosen+'\",\"type\":\"' + scope.layerChosen + '\",\"scroll\":\"10s\",\"body\":{}}';
 			this.queryGeoBound = '\"size\": 0,'+ 
 						  '\"query\": {'+ 
@@ -123,39 +119,6 @@ define(function (require){
 								    '}'+
 								  '}';
 
-			this.queryClickShape = '{\"index\":\"'+scope.vis.indexPattern.id+'\",'+
-										'\"body\":{'+
-											'\"size\": 0,'+ 
-											'\"query\":{'+
-												'\"bool\": {'+
-												'\"must\":[],'+
-												'\"must_not\":[],'+
-											      '\"filter\": {'+
-											        '\"geo_shape\": {'+
-											          '\"'+scope.vis.params.geoShapeField+'\": {'+
-											            '\"indexed_shape\": {'+
-												              '\"id\": \"'+scope.shapeClicked+'\",'+
-												              '\"type\": \"'+scope.layerChosen+'\",'+
-												              '\"index\": \"'+scope.vis.params.index_chosen+'\",'+
-												              '\"path\":\"shape_coordinates\"'+
-														'},'+
-											            '\"relation\": \"intersects\"'+
-											          '}'+
-											        '}'+
-											      '}'+
-											    '}'+
-											'},'+
-											'\"aggs\": {'+
-											    '\"bound\": {'+
-											      '\"geo_bounds\": {'+
-											        '\"field\": \"'+scope.vis.params.geoPointField+'\",'+
-											        '\"wrap_longitude\": true'+
-											      '}'+
-											    '}'+
-											'}'+
-										'}'+
-									'}';	
-
 			this.queryGeoShapeMS = '{\"body\":[]}';				  
 		}
 
@@ -174,7 +137,7 @@ define(function (require){
 
 		function createStringGeoShape(id,scope,filters_to_apply){
 
-			var str_index = '{\"index\":\"'+scope.vis.indexPattern.id+'\"},';
+			var str_index = '{\"index\":\"'+scope.vis.indexPattern.title+'\"},';
 			var str_query = '{\"query\":{\"bool\":{\"must\":[],\"must_not\":[],\"filter\":{\"geo_shape\": {\"'+scope.vis.params.geoShapeField+'\": {\"indexed_shape\": {\"id\": \"'+id+'\",\"type\": \"'+scope.layerChosen+'\",\"index\": \"'+scope.vis.params.index_chosen+'\",\"path\":\"shape_coordinates\"}}}}}}}';
 			var obj_query = JSON.parse(str_query);
 			
@@ -306,6 +269,8 @@ define(function (require){
 			var results = [];
 			var took = 0;
 
+			console.log("HITS_IDS.length: "+hits_ids.length);
+
 			/*if you have two maps in a dashboard, for example one with 'countries' layer and the other one with 'italy_municipalities' layer,
 			and you filter on a country different from Italy, the queryFilterAreaWorld's result will be 0. hits_ids.length == 0.*/
 			if(hits_ids.length == 0){ 
@@ -419,6 +384,8 @@ define(function (require){
 	        new_query_json = insertEnvelope(new_query_json,"]]",bottom_right);
 
 	        new_query = JSON.parse(new_query_json);
+	        console.log("FILTER AREA");
+	        console.log(new_query);
 
 	        client.search(new_query, function getMoreUntilDone(error, response) {
             	if(error){
@@ -518,6 +485,8 @@ define(function (require){
 			}
 
 			var top_left,bottom_right;
+			console.log("GEO_BOUND_QUERY");
+			console.log(new_query);
 
 			client.search(new_query, function (error, response) {
             	if(error){
@@ -536,6 +505,9 @@ define(function (require){
 
 	                bottom_right = response.aggregations.bounds_data.bounds.bottom_right.lon + ',' + response.aggregations.bounds_data.bounds.bottom_right.lat;
 	                top_left = response.aggregations.bounds_data.bounds.top_left.lon + ',' + response.aggregations.bounds_data.bounds.top_left.lat;
+
+	                console.log("bottom_right: "+bottom_right);
+	                console.log("top_left: "+top_left);
 
 	                queryFilterAreaWorld(scope,client,jsonData,queryJson,bottom_right,top_left,leafletData,needFilters,filters);
 	            }
@@ -565,9 +537,11 @@ define(function (require){
 					objSearchSourceJSON = JSON.parse(searchSourceJSON);
 
 					//for query_string
-					filters_tot.push(objSearchSourceJSON.query);
-					filters_from_saved_vis.push(objSearchSourceJSON.query);
-
+					if(JSON.stringify(objSearchSourceJSON.query) != "{\"match_all\":{}}"){
+						filters_tot.push(objSearchSourceJSON.query);
+						filters_from_saved_vis.push(objSearchSourceJSON.query);
+					}
+					
 					if(objSearchSourceJSON.filter.length != 0)
 						for(var key in objSearchSourceJSON.filter){
 					        filters_bar.push(objSearchSourceJSON.filter[key]);
@@ -580,76 +554,11 @@ define(function (require){
 				}
 			});
 		};
-
-		function fixCoordinates(coordinates){
-			if(coordinates["latitude_left"] == coordinates["latitude_right"]){
-				coordinates["latitude_right"] = Math.pow(10,-constFixCoordinates) * (Math.floor(coordinates["latitude_right"]*Math.pow(10,constFixCoordinates)));
-
-				if(coordinates["longitude_left"] == coordinates["longitude_right"])
-					coordinates["longitude_right"] = Math.pow(10,-constFixCoordinates) * (Math.ceil(coordinates["longitude_right"]*Math.pow(10,constFixCoordinates)));
-			}
-		}
-
-		function queryClickEvent(scope,client,queryFilter,filters){
-			var queryJson = new QueryJSON(scope);
-			var coordinates = {};
-			new_query = JSON.parse(queryJson.queryClickShape);
-
-			if(filters.length != 0){
-				console.log("NEED FILTERS QUERY CLICKED EVENT.");
-				addFilters(new_query,filters);
-
-			}
-
-			client.search(new_query,function(error,response){
-				if(error){
-					console.error("Error executing QUERY_CLICK_EVENT");
-            		scope.errorField = true;
-                	scope.textError = "Error in executing QUERY_CLICK_EVENT. \n" + error;
-            		return;
-				}else{
-					console.log("queryClickEvent");
-
-					if(response.aggregations.bound.bounds == undefined){
-	            		console.log("NO POINTS IN THIS geo_bounding_box");
-                		return;
-	            	}
-
-					coordinates["latitude_left"] = response.aggregations.bound.bounds.top_left.lat;
-					coordinates["longitude_left"] = response.aggregations.bound.bounds.top_left.lon;
-					coordinates["latitude_right"] = response.aggregations.bound.bounds.bottom_right.lat;
-					coordinates["longitude_right"] = response.aggregations.bound.bounds.bottom_right.lon;
-
-					//create geo bounding filter
-			        var filter;
-
-			        filter = {
-			          meta: {
-			            negate: false,
-			            index: scope.vis.indexPattern.id
-			          },
-			          geo_bounding_box:{}
-
-			        };
-
-			        fixCoordinates(coordinates);
-
-			        filter.geo_bounding_box[scope.vis.params.geoPointField] = {
-			          top_left: {lat: coordinates["latitude_left"], lon: coordinates["longitude_left"]},
-			          bottom_right:{lat: coordinates["latitude_right"], lon: coordinates["longitude_right"]}
-			        };
-
-			        queryFilter.addFilters(filter);
-				}
-			});
-
-		};
 		
 
 		return {
 			makeQuery:makeQuery,
 			queryKibanaIndex:queryKibanaIndex,
-			queryClickEvent:queryClickEvent
 		}
 	}
 });

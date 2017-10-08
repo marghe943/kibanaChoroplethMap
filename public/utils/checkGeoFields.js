@@ -25,7 +25,7 @@ define(function (require){
 	return function checkFieldFactory(Private){
 
 		function checkGeoFields(scope){
-			scope.indexChosen = scope.vis.indexPattern.id;
+			scope.indexChosen = scope.vis.indexPattern.title; //CAMBIARE!!!
 			console.log(scope.vis.indexPattern);
 			var found_shape_point=false;
 			var found_point=false;
